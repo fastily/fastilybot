@@ -1,4 +1,4 @@
-"""miscellaneous methods and classes shared between bots and reports"""
+"""Miscellaneous methods and classes shared between bots and reports"""
 
 import logging
 
@@ -43,6 +43,18 @@ class CQuery:
 
     @staticmethod
     def _do_query(wiki: Wiki, fn: Callable[..., list[str]], title: str, nsl: list[Union[NS, str]] = [], expiry: int = 10) -> list[str]:
+        """Performs a query and caches the result on disk.  If a matching, non-expired cached query was found, then that result will be returned.
+
+        Args:
+            wiki (Wiki): The Wiki object to use
+            fn (Callable[..., list[str]]): The method to call on cache miss.
+            title (str): The title to query
+            nsl (list[Union[NS, str]], optional): If set, only return results in these namespaces.  Defaults to [].
+            expiry (int, optional): The amount of time, in minutes, before the cached result should be considered outdated. Defaults to 10.
+
+        Returns:
+            list[str]: The result of the query
+        """
         (p := _CACHE_ROOT / wiki.domain / wiki.which_ns(title)).mkdir(parents=True, exist_ok=True)
         cache = p / (wiki.nss(title) + ("_" + "_".join(sorted([wiki.ns_manager.stringify(n) for n in nsl])) if nsl else "") + ".txt")
 
@@ -55,8 +67,28 @@ class CQuery:
 
     @staticmethod
     def category_members(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
+        """Fetches the elements in a category.
+
+        Args:
+            wiki (Wiki): The Wiki object to use
+            title (str): The title of the category to fetch elements from.  Must include `Category:` prefix.
+            ns (Union[NS, str], optional): Only return results that are in these namespaces. Optional, leave blank to disable
+
+        Returns:
+            list[str]: a `list` containing `title`'s category members.
+        """
         return CQuery._do_query(wiki, wiki.category_members, title, list(ns))
 
     @staticmethod
     def what_transcludes_here(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
+        """Fetch pages that translcude a page.  If querying for templates, you must include the `Template:` prefix.
+
+        Args:
+            wiki (Wiki): The Wiki object to use
+            title (str): The title to query
+            ns (Union[NS, str]): Only return results in these namespaces.  Optional, leave empty to disable.
+
+        Returns:
+            list[str]: The list of pages that transclude `title`.
+        """
         return CQuery._do_query(wiki, wiki.what_transcludes_here, title, list(ns))

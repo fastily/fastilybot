@@ -1,3 +1,4 @@
+"""Reports run by FastilyBot on the English Wikipedia"""
 import json
 import logging
 import re
@@ -21,11 +22,20 @@ _UPDATING_REPORT = "BOT: Updating report"
 
 _DBR = "Wikipedia:Database reports/"
 
-
 _DMY_REGEX = r"\d{1,2}? (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}?"
 
 
 def _listify(l: Iterable, should_escape: bool = True, header: str = _UPDATED_AT) -> str:
+    """Convenience method which converts and formats an Iterable into wikitext ready to be posted as a finished database report.
+
+    Args:
+        l (Iterable): The Iterable to convert into wikitext
+        should_escape (bool, optional): Set `False` to disable escaping of wikilinks. Defaults to True.
+        header (str, optional): The header to put at the top of the generated wikitext. Defaults to _UPDATED_AT.
+
+    Returns:
+        str: The report wikitext derived from `l`.
+    """
     c = ":" if should_escape else ""
     return header + "\n".join((f"*[[{c}{s}]]" for s in l))
 
@@ -34,22 +44,55 @@ class Reports:
     """Fastily's Wikipedia database reports"""
 
     def __init__(self, wiki: Wiki):
+        """Initializer, creates a Reports object.
+
+        Args:
+            wiki (Wiki): The Wiki object to use
+        """
         self.wiki: Wiki = wiki
         self._com: Wiki = None
 
     def _simple_update(self, subpage: str, text: Union[Iterable, str], should_escape: bool = True) -> bool:
+        """Convenience method which updates to the specified database report.
+
+        Args:
+            subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix)
+            text (Union[Iterable, str]): The text to post (`str`) or an `Iterable` (will be passed to `self._listify()`)
+            should_escape (bool, optional): Set `False` to disable escaping of wikilinks.  Does nothing if `text is a `str`. Defaults to True.
+
+        Returns:
+            bool: `True` if the update operation succeeded.
+        """
         log.info("Generating report for '%s'", subpage)
         return self.wiki.edit(_DBR + subpage, text if isinstance(text, str) else _listify(text, should_escape), _UPDATING_REPORT)
 
     def _dump_file_report(self, subpage: str, report_num: int) -> bool:
+        """Convenience method which updates a file-based database report using a `fastilybot-toolforge` report.  Equivalent to `self._simple_update(subpage, fetch_report(report_num))`.
+
+        Args:
+            subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
+            report_num (int): The `fastilybot-toolforge` report number to use
+
+        Returns:
+            bool: `True` if the update operation succeeded.
+        """
         return self._simple_update(subpage, fetch_report(report_num))
 
     def _read_ignore(self, subpage: str, *ns: Union[NS, str]) -> list[str]:
+        """Get the contents of database report's ignore page.  This lists the wikilinks on `subpage`.
+
+        Args:
+            subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
+            ns (Union[NS, str]): Only return results in these namespaces.  Optional, leave empty to disable.
+
+        Returns:
+            list[str]: The contents of the ignore page of `subpage`.
+        """
         return self.wiki.links_on_page(f"{_DBR}{subpage}/Ignore", *ns)
 
-    def _resolve_entity(self, e: Union[int, str, tuple, list]) -> Iterable[str]:
+    def _resolve_entity(self, e: Union[int, str, tuple, list, set]) -> Iterable[str]:
 
-        if isinstance(e, list):
+        if isinstance(e, list) or isinstance(e, set):
             return e
 
         if isinstance(e, tuple):
@@ -79,11 +122,22 @@ class Reports:
         return target
 
     @property
-    def com(self):
+    def com(self) -> Wiki:
+        """An anonymous Wiki object that points to the Wikimedia Commons.  This property is cached and lazy loaded.
+
+        Returns:
+            Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
+        """
         if not self._com:
             self._com = Wiki("commons.wikimedia.org", cookie_jar=None)
 
         return self._com
+
+    def all_free_license_tags(self):
+        """Reports free license tags found on enwp and whether those tags exist on Commons.  Report 3"""
+        subpage = "All free license tags"
+        self._simple_update(subpage, l := self._difference_of({t for cat in self.wiki.links_on_page(f"{_DBR}{subpage}/Sources") for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._read_ignore(subpage)), False)
+        self._simple_update("Free license tags which do not exist on Commons", [k for k, v in MQuery.exists(self.com, list(l)).items() if not v], False)
 
     def duplicate_on_commons(self):
         """Reports files with a duplicate on Commons.  Report 10"""
@@ -101,6 +155,11 @@ class Reports:
         """Reports low resolution free files.  Report 11"""
         self._simple_update("Orphaned low-resolution free files", self._difference_of(10, "Category:Wikipedia images available as SVG", "Category:All files proposed for deletion"))
 
+    def malformed_spi_reports(self):
+        """Reports malformed SPI reports.  Report 5"""
+        subpage = "Malformed SPI Cases"
+        self._simple_update(subpage, _listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._read_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
+
     def missing_file_copyright_tags(self):
         """Reports files misisng a copyright tag.  Report 9"""
         subpage = "Files without a license tag"
@@ -115,9 +174,17 @@ class Reports:
         """Reports orphaned, freely licensed PDFs.  Report 17"""
         self._simple_update("Orphaned PDFs", [s for s in fetch_report(9) if s.lower().endswith(".pdf")])
 
+    def orphaned_files_for_discussion(self):
+        """Reports files transcluding the FfD template without an associated disucssion.  Report 2"""
+        self._simple_update("Files tagged for FfD missing an FfD nomination", [k for k, v in MQuery.what_links_here(self.wiki, CQuery.what_transcludes_here(self.wiki, "Template:Ffd", NS.FILE)).items() if "Wikipedia:Files for discussion" not in v])
+
     def orphaned_file_talk(self):
         """Reports orphaned file talk pages.  Report 16"""
         self._simple_update("Orphaned file talk pages", self._difference_of((16, NS.FILE_TALK), ("Category:Wikipedia orphaned talk pages that should not be speedily deleted", NS.FILE_TALK)), False)
+
+    def orphaned_keep_local(self):
+        """Reports orphaned freely licensed files tagged keep local.  Report 6"""
+        self._simple_update("Orphaned free files tagged keep local", fetch_report(9) & set(CQuery.what_transcludes_here(self.wiki, "Template:Keep local", NS.FILE)))
 
     def oversized_fair_use_files(self):
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""
@@ -131,3 +198,8 @@ class Reports:
     def shadows_commons_non_free(self):
         """Reports non-free files that shadow Commons files.  Report 14"""
         self._simple_update("Non-free files shadowing a Commons file", fetch_report(13) & fetch_report(5))
+
+    def shadows_commons_page(self):
+        """Reports local files that shadow a commons file or redirect.  Report 1"""
+        subpage = "File description pages shadowing a Commons file or redirect"
+        self._simple_update(subpage, "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, *self._read_ignore(subpage))))

@@ -40,19 +40,19 @@ def main():
 
         for id in [int(s) for s in args.r.split(",")]:
             if id == 1:
-                pass
+                r.shadows_commons_page()
             elif id == 2:
-                pass
+                r.orphaned_files_for_discussion()
             elif id == 3:
-                pass
+                r.all_free_license_tags()
             elif id == 4:
-                pass
+                pass  # mtc regexes
             elif id == 5:
-                pass
+                r.malformed_spi_reports()
             elif id == 6:
-                pass
+                r.orphaned_keep_local()
             elif id == 7:
-                pass
+                pass  # retired
             elif id == 8:
                 r.oversized_fair_use_files()
             elif id == 9:
