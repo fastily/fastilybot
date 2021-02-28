@@ -4,6 +4,7 @@ import logging
 
 from collections.abc import Callable
 from pathlib import Path
+from shutil import rmtree
 from time import time
 from typing import Union
 
@@ -36,6 +37,11 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
 
     p = prefix or ""
     return {p + s.replace("_", " ") for s in r.read_text().strip().split("\n")}
+
+
+def purge_cache():
+    """Deletes all cached files created by fastilybot"""
+    rmtree(_CACHE_ROOT, True)
 
 
 class CQuery:

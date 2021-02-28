@@ -91,8 +91,24 @@ class Reports:
         return self.wiki.links_on_page(f"{_DBR}{subpage}/Ignore", *ns)
 
     def _resolve_entity(self, e: Union[int, str, tuple, list, set]) -> Iterable[str]:
+        """Takes an object and interprets as follows:
+            * `int` - fetch the corresponding fastilybot-toolforge report
+            * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions.
+            * `list`/`set` - return the input
+            * `tuple` - the first element must be an `int`/`str` and will be interpreted as above.
+                * If the first element was a `str`, the remaning elements will be treated as a namespace filter
+                * If the first element was an `int`, then the second element will be used as the prefix for all the returned elements.
 
-        if isinstance(e, list) or isinstance(e, set):
+        Args:
+            e (Union[int, str, tuple, list, set]): The object to interpret
+
+        Raises:
+            ValueError: If the input could not be matched to any of the above conditions.
+
+        Returns:
+            Iterable[str]: The interpreted value of `e` as described above.
+        """
+        if isinstance(e, (list, set)):
             return e
 
         if isinstance(e, tuple):
@@ -112,7 +128,14 @@ class Reports:
         raise ValueError(f"invalid parameter, what is this: {e}")
 
     def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
+        """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
 
+        Args:
+            l (Union[int, str, tuple, list, set]): The object to interpret
+
+        Returns:
+            set: The result of the subtraction operation.
+        """
         if not isinstance(target := self._resolve_entity(l[0]), set):
             target = set(target)
 
@@ -166,6 +189,15 @@ class Reports:
         lcl = set(self.wiki.links_on_page("User:FastilyBot/License categories"))
         self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, "Template:Deletable file", *self._read_ignore(subpage)))).items() if v and lcl.isdisjoint(v)])
 
+    def mtc_redirects(self):
+        """Updates the MTC! redirect page.  Report 4"""
+        base = "Wikipedia:MTC!/Redirects"
+        d = MQuery.what_links_here(self.wiki, list(set(self.wiki.links_on_page("Wikipedia:Database reports/All free license tags") + self.wiki.links_on_page(base + "/IncludeAlso")
+                                                       ).difference(self.wiki.links_on_page("Wikipedia:Database reports/Free license tags which do not exist on Commons"))), True)
+        body = "\n".join(["|".join([self.wiki.nss(t) for t in ([k] + v)]) for k, v in d.items()])
+
+        self.wiki.edit(base, f"<pre>\n{body}\n</pre>", _UPDATING_REPORT)
+
     def non_free_pdfs(self):
         """Reports non-free PDFs.  Report 15"""
         self._dump_file_report("Non-free PDFs", 15)
@@ -203,3 +235,7 @@ class Reports:
         """Reports local files that shadow a commons file or redirect.  Report 1"""
         subpage = "File description pages shadowing a Commons file or redirect"
         self._simple_update(subpage, "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, *self._read_ignore(subpage))))
+
+    def transcluded_non_existent_templates(self):
+        """Reports non-existent templates that have transclusions.  Report 18"""
+        self._simple_update("Transclusions of non-existent templates", ["Special:WhatLinksHere/" + s for s in fetch_report(14, "Template:")], False)
