@@ -11,7 +11,7 @@ from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.wiki import Wiki
 
-from .utils import CQuery, fetch_report
+from .core import CQuery, FastilyBotBase, fetch_report
 
 log = logging.getLogger(__name__)
 
@@ -40,17 +40,16 @@ def _listify(l: Iterable, should_escape: bool = True, header: str = _UPDATED_AT)
     return header + "\n".join((f"*[[{c}{s}]]" for s in l))
 
 
-class Reports:
+class Reports(FastilyBotBase):
     """Fastily's Wikipedia database reports"""
 
-    def __init__(self, wiki: Wiki):
+    def __init__(self, wiki: Wiki) -> None:
         """Initializer, creates a Reports object.
 
         Args:
             wiki (Wiki): The Wiki object to use
         """
-        self.wiki: Wiki = wiki
-        self._com: Wiki = None
+        super().__init__(wiki)
 
     def _simple_update(self, subpage: str, text: Union[Iterable, str], should_escape: bool = True) -> bool:
         """Convenience method which updates to the specified database report.
@@ -89,72 +88,6 @@ class Reports:
             list[str]: The contents of the ignore page of `subpage`.
         """
         return self.wiki.links_on_page(f"{_DBR}{subpage}/Ignore", *ns)
-
-    def _resolve_entity(self, e: Union[int, str, tuple, list, set]) -> Iterable[str]:
-        """Takes an object and interprets as follows:
-            * `int` - fetch the corresponding fastilybot-toolforge report
-            * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions.
-            * `list`/`set` - return the input
-            * `tuple` - the first element must be an `int`/`str` and will be interpreted as above.
-                * If the first element was a `str`, the remaning elements will be treated as a namespace filter
-                * If the first element was an `int`, then the second element will be used as the prefix for all the returned elements.
-
-        Args:
-            e (Union[int, str, tuple, list, set]): The object to interpret
-
-        Raises:
-            ValueError: If the input could not be matched to any of the above conditions.
-
-        Returns:
-            Iterable[str]: The interpreted value of `e` as described above.
-        """
-        if isinstance(e, (list, set)):
-            return e
-
-        if isinstance(e, tuple):
-            name = e[0]
-            nsl = e[1:]
-        else:
-            name = e
-            nsl = (NS.FILE,)
-
-        if isinstance(name, int):
-            return fetch_report(name, self.wiki.ns_manager.canonical_prefix(nsl[0]))
-        elif name.startswith("Category:"):
-            return CQuery.category_members(self.wiki, name, *nsl)
-        elif name.startswith("Template:"):
-            return CQuery.what_transcludes_here(self.wiki, name, *nsl)
-
-        raise ValueError(f"invalid parameter, what is this: {e}")
-
-    def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
-        """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
-
-        Args:
-            l (Union[int, str, tuple, list, set]): The object to interpret
-
-        Returns:
-            set: The result of the subtraction operation.
-        """
-        if not isinstance(target := self._resolve_entity(l[0]), set):
-            target = set(target)
-
-        for e in l[1:]:
-            target = target.difference(self._resolve_entity(e))
-
-        return target
-
-    @property
-    def com(self) -> Wiki:
-        """An anonymous Wiki object that points to the Wikimedia Commons.  This property is cached and lazy loaded.
-
-        Returns:
-            Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
-        """
-        if not self._com:
-            self._com = Wiki("commons.wikimedia.org", cookie_jar=None)
-
-        return self._com
 
     def all_free_license_tags(self):
         """Reports free license tags found on enwp and whether those tags exist on Commons.  Report 3"""
@@ -216,7 +149,7 @@ class Reports:
 
     def orphaned_keep_local(self):
         """Reports orphaned freely licensed files tagged keep local.  Report 6"""
-        self._simple_update("Orphaned free files tagged keep local", fetch_report(9) & set(CQuery.what_transcludes_here(self.wiki, "Template:Keep local", NS.FILE)))
+        self._simple_update("Orphaned free files tagged keep local", fetch_report(9).intersection(CQuery.what_transcludes_here(self.wiki, "Template:Keep local", NS.FILE)))
 
     def oversized_fair_use_files(self):
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""

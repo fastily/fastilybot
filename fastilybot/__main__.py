@@ -1,5 +1,6 @@
 
 import argparse
+from fastilybot.bots import Bots
 import logging
 
 from collections.abc import Iterable
@@ -9,13 +10,13 @@ from rich.logging import RichHandler
 from pwiki.wgen import load_px, setup_px
 from pwiki.wiki import Wiki
 
+from .core import purge_cache
 from .reports import Reports
-from .utils import purge_cache
 
 log = logging.getLogger(__name__)
 
 
-def _determine_tasks(individual: str, do_all: bool, total_ids: int) -> Iterable[int]:
+def _determine_tasks(individual: str, do_all: bool = False, total_ids: int = 0) -> Iterable[int]:
     """Convenience method, parses the task list arguments and returns the list of ids to process.  Note that `do_all` takes precedence over `individual`.
 
     Args:
@@ -49,6 +50,7 @@ def _main():
 
     if args.purge_cache:
         purge_cache()
+        return
 
     if args.wgen:
         setup_px()
@@ -59,6 +61,15 @@ def _main():
         return
 
     wiki = Wiki(username=args.u, password=load_px().get(args.u))
+
+    if bot_ids := _determine_tasks(args.b):
+        b = Bots(wiki)
+
+        for id in bot_ids:
+            if id == 1:
+                b.mtc_helper()
+            else:
+                log.warning("No such bot task (%d), skipping", id)
 
     if report_ids := _determine_tasks(args.r, args.all_reports, 18):
         r = Reports(wiki)

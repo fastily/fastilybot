@@ -2,7 +2,7 @@
 
 import logging
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from shutil import rmtree
 from time import time
@@ -42,6 +42,85 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
 def purge_cache():
     """Deletes all cached files created by fastilybot"""
     rmtree(_CACHE_ROOT, True)
+
+
+class FastilyBotBase:
+    """Base class for FastilyBot bot types"""
+
+    def __init__(self, wiki: Wiki) -> None:
+        """Initializer, creates a new FastilyBotBase
+
+        Args:
+            wiki (Wiki): The Wiki object to use
+        """
+        self.wiki: Wiki = wiki
+        self._com: Wiki = None
+
+    def _resolve_entity(self, e: Union[int, str, tuple, list, set]) -> Iterable[str]:
+        """Takes an object and interprets as follows:
+            * `int` - fetch the corresponding fastilybot-toolforge report
+            * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions.
+            * `list`/`set` - return the input
+            * `tuple` - the first element must be an `int`/`str` and will be interpreted as above.
+                * If the first element was a `str`, the remaning elements will be treated as a namespace filter
+                * If the first element was an `int`, then the second element will be used as the prefix for all the returned elements.
+
+        Args:
+            e (Union[int, str, tuple, list, set]): The object to interpret
+
+        Raises:
+            ValueError: If the input could not be matched to any of the above conditions.
+
+        Returns:
+            Iterable[str]: The interpreted value of `e` as described above.
+        """
+        if isinstance(e, (list, set)):
+            return e
+
+        if isinstance(e, tuple):
+            name = e[0]
+            nsl = e[1:]
+        else:
+            name = e
+            nsl = (NS.FILE,)
+
+        if isinstance(name, int):
+            return fetch_report(name, self.wiki.ns_manager.canonical_prefix(nsl[0]))
+        elif name.startswith("Category:"):
+            return CQuery.category_members(self.wiki, name, *nsl)
+        elif name.startswith("Template:"):
+            return CQuery.what_transcludes_here(self.wiki, name, *nsl)
+
+        raise ValueError(f"invalid parameter, what is this: {e}")
+
+    def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
+        """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
+
+        Args:
+            l (Union[int, str, tuple, list, set]): The object to interpret
+
+        Returns:
+            set: The result of the subtraction operation.
+        """
+        if not isinstance(target := self._resolve_entity(l[0]), set):
+            target = set(target)
+
+        for e in l[1:]:
+            target = target.difference(self._resolve_entity(e))
+
+        return target
+
+    @property
+    def com(self) -> Wiki:
+        """An anonymous Wiki object that points to the Wikimedia Commons.  This property is cached and lazy loaded.
+
+        Returns:
+            Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
+        """
+        if not self._com:
+            self._com = Wiki("commons.wikimedia.org", cookie_jar=None)
+
+        return self._com
 
 
 class CQuery:

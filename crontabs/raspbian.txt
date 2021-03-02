@@ -1,0 +1,28 @@
+PATH=/home/pi/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
+
+###############
+## BOT TASKS ##
+###############
+
+## Daily
+# (ddNotifier, findCommonsFFD, dateNowCommons, ffdNotifier)
+#00 1 * * * java -Xmx512M -jar FB.jar -b 6,7,11,12 > bots-daily.txt 2>&1
+
+
+## Tri-Weekly
+# (mtcHelper, removeBadMTC, findDelComFFD)
+#00 7 * * 1,3,5 java -Xmx512M -jar FB.jar -b 1,2,8 > bots-tri-weekly.txt 2>&1
+
+
+## Weekly
+# (unflagOI, findLicConflict, findKeptComFFD, flagOI)
+#00 11 * * 1 java -Xmx512M -jar FB.jar -b 4,5,9,10 > bots-weekly.txt 2>&1
+
+
+
+##################
+## REPORT TASKS ##
+##################
+
+## Weekly
+30 12 * * 1 python3.9 -m fastilybot --all-reports > reports-weekly.txt 2>&1
