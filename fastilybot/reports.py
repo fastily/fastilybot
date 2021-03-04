@@ -167,7 +167,7 @@ class Reports(FastilyBotBase):
     def shadows_commons_page(self):
         """Reports local files that shadow a commons file or redirect.  Report 1"""
         subpage = "File description pages shadowing a Commons file or redirect"
-        self._simple_update(subpage, "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, *self._read_ignore(subpage))))
+        self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, *self._read_ignore(subpage))))
 
     def transcluded_non_existent_templates(self):
         """Reports non-existent templates that have transclusions.  Report 18"""

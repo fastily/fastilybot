@@ -35,7 +35,7 @@ class Bots(FastilyBotBase):
         d = {k: v[0] for k, v in MQuery.duplicate_files(self.wiki, list(self._difference_of(fetch_report(1).intersection(CQuery.what_transcludes_here(self.wiki, "Template:Copy to Wikimedia Commons", NS.FILE)),
                                                                                             "Template:Keep local", "Category:Copy to Wikimedia Commons (inline-identified)")), False, True).items() if v}
         texts = MQuery.page_text(self.wiki, list(d.keys()))
-        
+
         for k, v in d.items():
             if (n := re.sub(mtc_regex, "", texts[k])) != texts[k]:
                 self.wiki.edit(k, ("" if k in ncd else self.mtc_tag % v + "\n") + n, "BOT: This file has already been copied to Commons")
