@@ -1,4 +1,5 @@
 """Reports run by FastilyBot on the English Wikipedia"""
+
 import json
 import logging
 import re
@@ -171,4 +172,4 @@ class Reports(FastilyBotBase):
 
     def transcluded_non_existent_templates(self):
         """Reports non-existent templates that have transclusions.  Report 18"""
-        self._simple_update("Transclusions of non-existent templates", ["Special:WhatLinksHere/" + s for s in fetch_report(14, "Template:")], False)
+        self._simple_update("Transclusions of non-existent templates", sorted(["Special:WhatLinksHere/" + s for s in fetch_report(14, "Template:")]), False)

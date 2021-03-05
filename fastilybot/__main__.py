@@ -75,7 +75,17 @@ def _main():
 
         for id in bot_ids:
             if id == 1:
-                b.mtc_helper()
+                b.mtc_clerk()
+            elif id == 2:
+                b.remove_bad_mtc()
+            elif id == 3:
+                pass # see Report 5
+            elif id == 4:
+                b.untag_unorphaned_images()
+            elif id == 5:
+                b.find_license_conflicts()
+            elif id == 6:
+                pass #ddnotifier
             else:
                 log.warning("No such bot task (%d), skipping", id)
 
