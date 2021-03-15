@@ -12,6 +12,7 @@ from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.wiki import Wiki
 
+from .constants import T
 from .core import CQuery, FastilyBotBase, fetch_report
 
 log = logging.getLogger(__name__)
@@ -52,6 +53,10 @@ class Reports(FastilyBotBase):
         """
         super().__init__(wiki)
 
+    ##################################################################################################
+    ######################################## H E L P E R S ###########################################
+    ##################################################################################################
+
     def _simple_update(self, subpage: str, text: Union[Iterable, str], should_escape: bool = True) -> bool:
         """Convenience method which updates to the specified database report.
 
@@ -90,6 +95,10 @@ class Reports(FastilyBotBase):
         """
         return self.wiki.links_on_page(f"{_DBR}{subpage}/Ignore", *ns)
 
+    ##################################################################################################
+    ######################################## R E P O R T S ###########################################
+    ##################################################################################################
+
     def all_free_license_tags(self):
         """Reports free license tags found on enwp and whether those tags exist on Commons.  Report 3"""
         subpage = "All free license tags"
@@ -99,7 +108,7 @@ class Reports(FastilyBotBase):
     def duplicate_on_commons(self):
         """Reports files with a duplicate on Commons.  Report 10"""
         subpage = "Local files with a duplicate on Commons"
-        self._simple_update(subpage, self._difference_of(1, "Template:Deletable file", CQuery.what_transcludes_here(self.com, "Template:Deletion template tag", NS.FILE), *self._read_ignore(subpage)))
+        self._simple_update(subpage, self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), *self._read_ignore(subpage)))
 
     def impossible_daily_deletion(self):
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
@@ -121,7 +130,7 @@ class Reports(FastilyBotBase):
         """Reports files misisng a copyright tag.  Report 9"""
         subpage = "Files without a license tag"
         lcl = set(self.wiki.links_on_page("User:FastilyBot/License categories"))
-        self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, "Template:Deletable file", *self._read_ignore(subpage)))).items() if v and lcl.isdisjoint(v)])
+        self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, *self._read_ignore(subpage)))).items() if v and lcl.isdisjoint(v)])
 
     def mtc_redirects(self):
         """Updates the MTC! redirect page.  Report 4"""
@@ -142,7 +151,7 @@ class Reports(FastilyBotBase):
 
     def orphaned_files_for_discussion(self):
         """Reports files transcluding the FfD template without an associated disucssion.  Report 2"""
-        self._simple_update("Files tagged for FfD missing an FfD nomination", [k for k, v in MQuery.what_links_here(self.wiki, CQuery.what_transcludes_here(self.wiki, "Template:Ffd", NS.FILE)).items() if "Wikipedia:Files for discussion" not in v])
+        self._simple_update("Files tagged for FfD missing an FfD nomination", [k for k, v in MQuery.what_links_here(self.wiki, CQuery.what_transcludes_here(self.wiki, T.F, NS.FILE)).items() if "Wikipedia:Files for discussion" not in v])
 
     def orphaned_file_talk(self):
         """Reports orphaned file talk pages.  Report 16"""
@@ -150,12 +159,12 @@ class Reports(FastilyBotBase):
 
     def orphaned_keep_local(self):
         """Reports orphaned freely licensed files tagged keep local.  Report 6"""
-        self._simple_update("Orphaned free files tagged keep local", fetch_report(9).intersection(CQuery.what_transcludes_here(self.wiki, "Template:Keep local", NS.FILE)))
+        self._simple_update("Orphaned free files tagged keep local", fetch_report(9).intersection(CQuery.what_transcludes_here(self.wiki, T.KL, NS.FILE)))
 
     def oversized_fair_use_files(self):
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""
         subpage = "Large fair-use images"
-        self._simple_update(subpage, self._difference_of(7, "Template:Deletable file", *self._read_ignore(subpage)))
+        self._simple_update(subpage, self._difference_of(7, T.DF, *self._read_ignore(subpage)))
 
     def possibly_unsourced_files(self):
         """Reports free files without a machine-readable source.  Report 12"""

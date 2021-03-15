@@ -11,6 +11,7 @@ from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.wiki import Wiki
 
+from .constants import C, T
 from .core import CQuery, FastilyBotBase, fetch_report
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,10 @@ class Bots(FastilyBotBase):
 
         self._regex_cache: dict = {}
         self.mtc_tag: str = f"{{{{Now Commons|%s|date={datetime.utcnow():%-d %B %Y}|bot={self.wiki.username}}}}}"
+
+    ##################################################################################################
+    ######################################## H E L P E R S ###########################################
+    ##################################################################################################
 
     def _regex_for(self, title: str) -> str:
         """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
@@ -66,6 +71,10 @@ class Bots(FastilyBotBase):
 
         return out
 
+    ##################################################################################################
+    ########################################### B O T S ##############################################
+    ##################################################################################################
+
     def find_license_conflicts(self):
         """Finds files which are labled as both free and non-free.  Task 5"""
         for s in self._difference_of(2, *self.wiki.links_on_page("User:FastilyBot/Task5/Ignore")):
@@ -73,11 +82,11 @@ class Bots(FastilyBotBase):
 
     def mtc_clerk(self):
         """Find and fix tags for files tagged for transfer to Commons which have already transferred.  Task 1"""
-        ncd = set(CQuery.what_transcludes_here(self.wiki, "Template:Now Commons"))
-        mtc_regex = self._regex_for("Template:Copy to Wikimedia Commons")
+        ncd = set(CQuery.what_transcludes_here(self.wiki, T.NCD))
+        mtc_regex = self._regex_for(T.CTC)
 
-        d = {k: v[0] for k, v in MQuery.duplicate_files(self.wiki, list(self._difference_of(fetch_report(1).intersection(CQuery.what_transcludes_here(self.wiki, "Template:Copy to Wikimedia Commons", NS.FILE)),
-                                                                                            "Template:Keep local", "Category:Copy to Wikimedia Commons (inline-identified)")), False, True).items() if v}
+        d = {k: v[0] for k, v in MQuery.duplicate_files(self.wiki, list(self._difference_of(fetch_report(1).intersection(CQuery.what_transcludes_here(self.wiki, T.CTC, NS.FILE)),
+                                                                                            T.KL, C.CTC_II)), False, True).items() if v}
         texts = MQuery.page_text(self.wiki, list(d.keys()))
 
         for k, v in d.items():
@@ -86,25 +95,25 @@ class Bots(FastilyBotBase):
 
     def untag_unorphaned_images(self):
         """Removes the Orphan image tag from free files which are no longer orphaned.  Task 4"""
-        oi_regex = self._regex_for("Template:Orphan image")
+        oi_regex = self._regex_for(T.OI)
 
-        for s in (self._difference_of(9, self._difference_of(3, 4), "Template:Bots") & fetch_report(6)):
+        for s in (self._difference_of(9, self._difference_of(3, 4), T.B) & fetch_report(6)):
             self.wiki.replace_text(s, oi_regex, summary="BOT: File contains inbound links")
 
     def remove_bad_mtc(self):
         """Removes the MTC tag from files which do not appear to be eligible for Commons.  Task 2"""
-        l = self._difference_of("Template:Copy to Wikimedia Commons", self._category_members_recursive("Category:Copy to Wikimedia Commons reviewed by a human"), "Category:Copy to Wikimedia Commons (inline-identified)")
+        l = self._difference_of(T.CTC, self._category_members_recursive(C.CTC_H), C.CTC_II)
 
-        mtc_regex = self._regex_for("Template:Copy to Wikimedia Commons")
+        mtc_regex = self._regex_for(T.CTC)
 
         for s in list(chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page("User:FastilyBot/Task2/Blacklist"))):
             self.wiki.replace_text(s, mtc_regex, summary="BOT: This file does not appear to be eligible for Commons")
 
     def nominated_for_deleteion_on_commons(self):
         """Replaces `{{Now Commons}}` locally with `{{Nominated for deletion on Commons}}` if the file is nominated for deletion on Commons.  Task 7"""
-        ncd = "Template:Now Commons"
+        ncd = T.NCD
         ncd_regex = self._regex_for(ncd)
-        l = set(CQuery.what_transcludes_here(self.com, "Template:Deletion template tag", NS.FILE))
+        l = set(CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE))
 
         for k, v in MQuery.duplicate_files(self.wiki, CQuery.what_transcludes_here(self.wiki, ncd, NS.FILE), False, True).items():
             if v and v[0] in l:

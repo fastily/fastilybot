@@ -25,4 +25,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/gam
 ##################
 
 ## Weekly
-30 12 * * 1 cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color --all-reports > reports-weekly.txt 2>&1
+30 12 * * 1 cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color --all-reports > /home/fastilybot/logs/reports-weekly.txt 2>&1
