@@ -135,8 +135,8 @@ class Reports(FastilyBotBase):
     def mtc_redirects(self):
         """Updates the MTC! redirect page.  Report 4"""
         base = "Wikipedia:MTC!/Redirects"
-        d = MQuery.what_links_here(self.wiki, list(set(self.wiki.links_on_page("Wikipedia:Database reports/All free license tags") + self.wiki.links_on_page(base + "/IncludeAlso")
-                                                       ).difference(self.wiki.links_on_page("Wikipedia:Database reports/Free license tags which do not exist on Commons"))), True)
+        d = MQuery.what_links_here(self.wiki, list(set(self.wiki.links_on_page(_DBR + "All free license tags") + self.wiki.links_on_page(base + "/IncludeAlso")
+                                                       ).difference(self.wiki.links_on_page(_DBR + "Free license tags which do not exist on Commons"))), True)
         body = "\n".join(["|".join([self.wiki.nss(t) for t in ([k] + v)]) for k, v in d.items()])
 
         self.wiki.edit(base, f"<pre>\n{body}\n</pre>", _UPDATING_REPORT)

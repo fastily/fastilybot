@@ -33,7 +33,7 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
 
     if not (r := _CACHE_ROOT / (r_name := f"report{num}.txt")).exists() or (time() - r.stat().st_mtime) / 3600 > 24:
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
-        r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)  # TODO: replace with urllib?
+        r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
     p = prefix or ""
     return {p + s.replace("_", " ") for s in r.read_text().strip().split("\n")}
@@ -56,7 +56,7 @@ class FastilyBotBase:
         self.wiki: Wiki = wiki
         self._com: Wiki = None
 
-    def _resolve_entity(self, e: Union[int, str, tuple, list, set]) -> Iterable[str]:
+    def _resolve_entity(self, e: Union[int, str, tuple, list, set], default_nsl: tuple = (NS.FILE,)) -> Iterable[str]:
         """Takes an object and interprets as follows:
             * `int` - fetch the corresponding fastilybot-toolforge report
             * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions.
@@ -65,11 +65,11 @@ class FastilyBotBase:
                 * If the first element was a `str`, the remaning elements will be treated as a namespace filter
                 * If the first element was an `int`, then the second element will be used as the prefix for all the returned elements.
 
+            WARNING: If namespace was not specified via tuple, then it is assumed to be File namespace!
+
         Args:
             e (Union[int, str, tuple, list, set]): The object to interpret
-
-        Raises:
-            ValueError: If the input could not be matched to any of the above conditions.
+            default_nsl (tuple, optional): The default namespace filter (inclusive) to use if it is not specified in `e`.  Set `None` to disable.  Defaults to (NS.FILE,).
 
         Returns:
             Iterable[str]: The interpreted value of `e` as described above.
@@ -79,19 +79,17 @@ class FastilyBotBase:
 
         if isinstance(e, tuple):
             name = e[0]
-            nsl = e[1:]
+            nsl = () if any(x is None for x in e[1:]) else e[1:]
         else:
             name = e
-            nsl = (NS.FILE,)
+            nsl = default_nsl or ()
 
         if isinstance(name, int):
-            return fetch_report(name, self.wiki.ns_manager.canonical_prefix(nsl[0]))
+            return fetch_report(name, self.wiki.ns_manager.canonical_prefix(nsl[0]) if nsl else None)
         elif name.startswith("Category:"):
             return CQuery.category_members(self.wiki, name, *nsl)
         elif name.startswith("Template:"):
             return CQuery.what_transcludes_here(self.wiki, name, *nsl)
-
-        raise ValueError(f"invalid parameter, what is this: {e}")
 
     def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
         """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
@@ -148,7 +146,7 @@ class CQuery:
             cache.write_text("\n".join(l := fn(title, *nsl)))
             return l
 
-        return cache.read_text().strip().split("\n")
+        return out.split("\n") if (out := cache.read_text().strip()) else [] # handle empty files
 
     @staticmethod
     def category_members(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
