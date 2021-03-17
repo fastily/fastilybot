@@ -11,6 +11,7 @@ from typing import Union
 import requests
 
 from pwiki.ns import NS
+from pwiki.query_utils import strip_underscores
 from pwiki.wiki import Wiki
 
 _CACHE_ROOT = Path("/tmp/fastilybot")
@@ -35,8 +36,7 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
         r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
-    p = prefix or ""
-    return {p + s.replace("_", " ") for s in r.read_text().strip().split("\n")}
+    return set(strip_underscores(text.split("\n"), prefix or "") if (text := r.read_text().strip()) else [])
 
 
 def purge_cache():
@@ -79,7 +79,7 @@ class FastilyBotBase:
 
         if isinstance(e, tuple):
             name = e[0]
-            nsl = () if any(x is None for x in e[1:]) else e[1:]
+            nsl = () if None in e[1:] else e[1:]
         else:
             name = e
             nsl = default_nsl or ()
@@ -146,7 +146,7 @@ class CQuery:
             cache.write_text("\n".join(l := fn(title, *nsl)))
             return l
 
-        return out.split("\n") if (out := cache.read_text().strip()) else [] # handle empty files
+        return out.split("\n") if (out := cache.read_text().strip()) else []  # handle empty files
 
     @staticmethod
     def category_members(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
