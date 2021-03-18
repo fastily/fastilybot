@@ -5,11 +5,13 @@ class T:
     """Commonly used Template titles"""
     B: str = "Template:Bots"
     CTC: str = "Template:Copy to Wikimedia Commons"
+    DC: str = "Template:Deleted on Commons"
     DF: str = "Template:Deletable file"
     DTT: str = "Template:Deletion template tag"
     F: str = "Template:Ffd"
     KL: str = "Template:Keep local"
     NCD: str = "Template:Now Commons"
+    NFDC: str = "Template:Nominated for deletion on Commons"
     OI: str = "Template:Orphan image"
 
 

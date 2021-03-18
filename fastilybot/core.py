@@ -10,6 +10,7 @@ from typing import Union
 
 import requests
 
+from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.query_utils import strip_underscores
 from pwiki.wiki import Wiki
@@ -36,7 +37,7 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
         r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
-    return set(strip_underscores(text.split("\n"), prefix or "") if (text := r.read_text().strip()) else [])
+    return strip_underscores(text.split("\n"), prefix or "", set) if (text := r.read_text().strip()) else set()
 
 
 def purge_cache():
@@ -175,3 +176,21 @@ class CQuery:
             list[str]: The list of pages that transclude `title`.
         """
         return CQuery._do_query(wiki, wiki.what_transcludes_here, title, list(ns))
+
+
+class XQuery:
+    """Collection of extended Wiki queries"""
+
+    @staticmethod
+    def exists_filter(wiki: Wiki, titles: list[str], existent: bool = True) -> set:
+        """Check if elements in `titles` exist, then filter the results by `existent`.
+
+        Args:
+            wiki (Wiki): The Wiki to use
+            titles (list[str]): The list of titles to check
+            existent (bool, optional): Set `True` to only return titles that exist.  Set `False` to only fetch titles that don't exist. Defaults to True.
+
+        Returns:
+            set: The list of titles filtered by `existent`
+        """
+        return {k for k, v in MQuery.exists(wiki, titles).items() if existent == v}

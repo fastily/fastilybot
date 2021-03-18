@@ -79,13 +79,25 @@ def _main():
             elif id == 2:
                 b.remove_bad_mtc()
             elif id == 3:
-                pass # see Report 5
+                pass  # see Report 5
             elif id == 4:
                 b.untag_unorphaned_images()
             elif id == 5:
                 b.find_license_conflicts()
             elif id == 6:
-                pass #ddnotifier
+                pass  # ddnotifier
+            elif id == 7:
+                pass  # findCommonsFFD
+            elif id == 8:
+                b.find_deleted_on_commons()
+            elif id == 9:
+                pass  # findKeptComFFD
+            elif id == 10:
+                b.flag_orphaned_free_images()
+            elif id == 11:
+                pass  # dateNowCommons
+            elif id == 12:
+                pass  # ffdNotifier
             else:
                 log.warning("No such bot task (%d), skipping", id)
 

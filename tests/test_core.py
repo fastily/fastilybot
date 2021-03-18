@@ -3,9 +3,10 @@
 from unittest import TestCase
 
 from pwiki.ns import NS
-from pwiki.wiki import Wiki
 
-from fastilybot.core import FastilyBotBase, _CACHE_ROOT, CQuery, fetch_report
+from fastilybot.core import _CACHE_ROOT, CQuery, fetch_report, XQuery
+
+from .base import FastilyBotTestCase, WikiTestCase
 
 
 class TestCore(TestCase):
@@ -32,12 +33,8 @@ class TestCore(TestCase):
         target.unlink(missing_ok=True)  # cleanup
 
 
-class TestBotBase(TestCase):
+class TestBotBase(FastilyBotTestCase):
     """Tests for core's FastilyBotBase class"""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.b = FastilyBotBase(Wiki("test.wikipedia.org", cookie_jar=None))
 
     def test_resolve_entity(self):
         # sets, lists
@@ -81,12 +78,8 @@ class TestBotBase(TestCase):
         self.assertEqual("commons.wikimedia.org", self.b.com.domain)
 
 
-class TestCQuery(TestCase):
+class TestCQuery(WikiTestCase):
     """Tests for core's CQuery class"""
-
-    @classmethod
-    def setUpClass(cls):
-        cls.wiki = Wiki("test.wikipedia.org", cookie_jar=None)
 
     def test_category_members(self):
         self.assertCountEqual(["User:Fastily/Sandbox/Page/2", "File:FastilyTest.png"], CQuery.category_members(self.wiki, "Category:Fastily Test2"))
@@ -98,3 +91,12 @@ class TestCQuery(TestCase):
         self.assertListEqual(["FastilyTest"], CQuery.what_transcludes_here(self.wiki, "Template:FastilyTest", NS.MAIN))
         self.assertCountEqual(["User:Fastily/Sandbox/T", "FastilyTest"], CQuery.what_transcludes_here(self.wiki, "Template:FastilyTest"))
         self.assertFalse(CQuery.what_transcludes_here(self.wiki, "Template:Does Not Exist 37846237846"))
+
+
+class TestXQuery(WikiTestCase):
+    """Tests for core's XQuery class"""
+
+    def test_exists_filter(self):
+        target = ["Main Page", "User:Fastily/Sandbox", "User:Fastily/NoPageHere"]
+        self.assertCountEqual(["Main Page", "User:Fastily/Sandbox"], XQuery.exists_filter(self.wiki, target))
+        self.assertSetEqual({"User:Fastily/NoPageHere"}, XQuery.exists_filter(self.wiki, target, False))
