@@ -68,6 +68,16 @@ class TestBotBase(FastilyBotTestCase):
         self.assertTrue(result)
         self.assertFalse(list(result)[0].startswith("File:"))
 
+        # Config pages
+        self.assertCountEqual(["User:Fastily/Sandbox/Page/1", "User:Fastily/Sandbox/Page/2", "User:Fastily/Sandbox/Page/3", "File:FastilyTest.svg",
+                               "User:Fastily/Sandbox/T", "FastilyTest"], self.b._resolve_entity("User:Fastily/Sandbox/TestConfig", default_nsl=None))
+        self.assertSetEqual({"File:FastilyTest.svg"}, self.b._resolve_entity("User:Fastily/Sandbox/TestConfig"))
+        self.assertSetEqual({"FastilyTest"}, self.b._resolve_entity(("User:Fastily/Sandbox/TestConfig", NS.MAIN)))
+        self.assertFalse(self.b._resolve_entity("User:Fastily/Sandbox/DoesNotExist238478932"))
+
+        # Errors
+        self.assertIsNone(self.b._resolve_entity("Help:Foobar"))
+
     def test_difference_of(self):
         self.assertSetEqual({"File:FastilyTest.png"}, self.b._difference_of(("Category:Fastily Test2", None),  ["User:Fastily/Sandbox/Page/2"]))
         self.assertFalse(self.b._difference_of(2, 2))

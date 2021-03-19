@@ -28,7 +28,7 @@ class Bots(FastilyBotBase):
         Args:
             wiki (Wiki): The Wiki object to use
         """
-        super().__init__(wiki)
+        super().__init__(wiki, f"User:{wiki.whoami()}/Task/")
 
         self._regex_cache: dict = {}
         self.mtc_tag: str = f"{{{{Now Commons|%s|date={datetime.utcnow():%-d %B %Y}|bot={self.wiki.username}}}}}"
@@ -36,21 +36,6 @@ class Bots(FastilyBotBase):
     ##################################################################################################
     ######################################## H E L P E R S ###########################################
     ##################################################################################################
-
-    def _regex_for(self, title: str) -> str:
-        """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
-
-        Args:
-            title (str): The template to generate a regex for.
-
-        Returns:
-            str: The regex
-        """
-        if title in self._regex_cache:
-            return self._regex_cache[title]
-
-        self._regex_cache[title] = (r := r"(?si)\{\{(Template:)??(" + "|".join([self.wiki.nss(t) for t in (self.wiki.what_links_here(title, True) + [title])]) + r").*?\}\}\n?")
-        return r
 
     def _category_members_recursive(self, title: str) -> set:
         """Recursively fetch pages in the category specified by `title`.  Includes logic to avoid category loops.
@@ -81,9 +66,50 @@ class Bots(FastilyBotBase):
 
         return out
 
+    def _ignore_of(self, task_num: int) -> str:
+        """Convenience method, get the title of a task's ignore configuration
+
+        Args:
+            task_num (int): The task number to use
+
+        Returns:
+            str: the title of `task_num`'s ignore configuration
+        """
+        return self._task_config(task_num, "Ignore")
+
+    def _regex_for(self, title: str) -> str:
+        """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
+
+        Args:
+            title (str): The template to generate a regex for.
+
+        Returns:
+            str: The regex
+        """
+        if title in self._regex_cache:
+            return self._regex_cache[title]
+
+        self._regex_cache[title] = (r := r"(?si)\{\{(Template:)??(" + "|".join([self.wiki.nss(t) for t in (self.wiki.what_links_here(title, True) + [title])]) + r").*?\}\}\n?")
+        return r
+
+    def _task_config(self, task_num: int, suffix: str) -> str:
+        """Convenience method, get the title of a task configuration
+
+        Args:
+            task_num (int): The task number to use
+            suffix (str): The name of the configuration subpage.  Don't include the `/` prefix.
+
+        Returns:
+            str: The full title of the task configuration
+        """
+        return f"{self.config_prefix}{task_num}/{suffix}"
+
     ##################################################################################################
     ########################################### B O T S ##############################################
     ##################################################################################################
+
+    def daily_deletion_notifier(self):
+        pass
 
     def find_deleted_on_commons(self):
         """Replace instances of `{{Nominated for deletion on Commons}}` on files that have been deleted on Commons with `{{Deleted on Commons}}`.  Task 8"""
@@ -111,13 +137,13 @@ class Bots(FastilyBotBase):
 
     def find_license_conflicts(self):
         """Finds files which are labled as both free and non-free.  Task 5"""
-        for s in self._difference_of(2, *self.wiki.links_on_page("User:FastilyBot/Task5/Ignore")):
+        for s in self._difference_of(2, self._ignore_of(5)):
             self.wiki.edit(s, prepend="{{Wrong-license}}\n", summary="BOT: Marking conflict in copyright status")
 
     def flag_orphaned_free_images(self):
         """Finds freely licensed files with no fileusage and tags them with `{{Orphan image}}`.  Task 10"""
         oi_title = self.wiki.nss(T.OI)
-        for s in XQuery.exists_filter(self.wiki, self._difference_of(3, 9, T.B, T.DF, 4, *self.wiki.links_on_page("User:FastilyBot/Task10/Ignore"))):
+        for s in XQuery.exists_filter(self.wiki, self._difference_of(3, 9, T.B, T.DF, 4, self._ignore_of(10))):
             self.wiki.edit(s, append=f"\n{{{{{oi_title}}}}}", summary="BOT: this file has no inbound file usage")
 
     def mtc_clerk(self):
@@ -146,7 +172,7 @@ class Bots(FastilyBotBase):
 
         mtc_regex = self._regex_for(T.CTC)
 
-        for s in chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page("User:FastilyBot/Task2/Blacklist")):
+        for s in chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page(self._task_config(2, "Blacklist"))):
             self.wiki.replace_text(s, mtc_regex, summary="BOT: This file does not appear to be eligible for Commons")
 
     def nominated_for_deleteion_on_commons(self):

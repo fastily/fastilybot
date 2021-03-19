@@ -3,6 +3,7 @@
 import logging
 
 from collections.abc import Callable, Iterable
+from itertools import chain
 from pathlib import Path
 from shutil import rmtree
 from time import time
@@ -48,19 +49,22 @@ def purge_cache():
 class FastilyBotBase:
     """Base class for FastilyBot bot types"""
 
-    def __init__(self, wiki: Wiki) -> None:
+    def __init__(self, wiki: Wiki, config_prefix: str = None) -> None:
         """Initializer, creates a new FastilyBotBase
 
         Args:
             wiki (Wiki): The Wiki object to use
+            config_prefix (str, optional): Config prefix title for extending classes to use.  Does nothing otherwise. Defaults to None.
         """
         self.wiki: Wiki = wiki
+        self.config_prefix = config_prefix
+
         self._com: Wiki = None
 
     def _resolve_entity(self, e: Union[int, str, tuple, list, set], default_nsl: tuple = (NS.FILE,)) -> Iterable[str]:
         """Takes an object and interprets as follows:
             * `int` - fetch the corresponding fastilybot-toolforge report
-            * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions.
+            * `str` - if this a category title, get category members, if this is a template title, then get the template's transclusions, if userpage or project page, get links and call this method again with each link.
             * `list`/`set` - return the input
             * `tuple` - the first element must be an `int`/`str` and will be interpreted as above.
                 * If the first element was a `str`, the remaning elements will be treated as a namespace filter
@@ -91,6 +95,8 @@ class FastilyBotBase:
             return CQuery.category_members(self.wiki, name, *nsl)
         elif name.startswith("Template:"):
             return CQuery.what_transcludes_here(self.wiki, name, *nsl)
+        elif name.startswith(("User:", "Wikipedia:")):
+            return set(chain(*[self._resolve_entity(s, nsl) for s in self.wiki.links_on_page(name)]))
 
     def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
         """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
