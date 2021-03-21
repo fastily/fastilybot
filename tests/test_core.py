@@ -87,6 +87,13 @@ class TestBotBase(FastilyBotTestCase):
         self.assertTrue(self.b.com)
         self.assertEqual("commons.wikimedia.org", self.b.com.domain)
 
+    def test_config_of_and_ignore_of(self):
+        with self.assertRaises(RuntimeError):
+            self.b._config_of("Foo", "Bar")
+
+        with self.assertRaises(RuntimeError):
+            self.b._ignore_of(99)
+
 
 class TestCQuery(WikiTestCase):
     """Tests for core's CQuery class"""

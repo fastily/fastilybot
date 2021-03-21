@@ -61,6 +61,34 @@ class FastilyBotBase:
 
         self._com: Wiki = None
 
+    def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
+        """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
+
+        Args:
+            l (Union[int, str, tuple, list, set]): The object to interpret
+
+        Returns:
+            set: The result of the subtraction operation.
+        """
+        if not isinstance(target := self._resolve_entity(l[0]), set):
+            target = set(target)
+
+        for e in l[1:]:
+            target = target.difference(self._resolve_entity(e))
+
+        return target
+
+    def _ignore_of(self, sub_title: Union[int, str]) -> str:
+        """Convenience method, get the title of an ignore configuration page.
+
+        Args:
+            sub_title (Union[int,str]): The sub title (comes after prefix) value to use.  Don't include the `/` prefix.  An `int` in this field will be interpreted as a `str`.
+
+        Returns:
+            str: the title of `sub_title`'s ignore configuration
+        """
+        return self._config_of(sub_title, "Ignore")
+
     def _resolve_entity(self, e: Union[int, str, tuple, list, set], default_nsl: tuple = (NS.FILE,)) -> Iterable[str]:
         """Takes an object and interprets as follows:
             * `int` - fetch the corresponding fastilybot-toolforge report
@@ -98,22 +126,20 @@ class FastilyBotBase:
         elif name.startswith(("User:", "Wikipedia:")):
             return set(chain(*[self._resolve_entity(s, nsl) for s in self.wiki.links_on_page(name)]))
 
-    def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
-        """Subtract database reports and lists of titles from one another.  See `_resolve_entity()` for acceptable inputs.
+    def _config_of(self, sub_title: Union[int, str], suffix: str) -> str:
+        """Convenience method, get the title of a configuration page
 
         Args:
-            l (Union[int, str, tuple, list, set]): The object to interpret
+            sub_title (Union[int,str]): The task number to use
+            suffix (str): The sub title name of the configuration subpage (excluding `self.config_prefix`).  Don't include the `/` prefix.  An `int` in this field will be interpreted as a `str`.
 
         Returns:
-            set: The result of the subtraction operation.
+            str: The full title of the configuration page
         """
-        if not isinstance(target := self._resolve_entity(l[0]), set):
-            target = set(target)
+        if self.config_prefix is None:
+            raise RuntimeError("You must set config_prefix in the initializer to use this method!")
 
-        for e in l[1:]:
-            target = target.difference(self._resolve_entity(e))
-
-        return target
+        return f"{self.config_prefix}{sub_title}/{suffix}"
 
     @property
     def com(self) -> Wiki:

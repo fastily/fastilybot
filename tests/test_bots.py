@@ -33,5 +33,5 @@ class TestBots(WikiTestCase):
     def test_ignore_of(self):
         self.assertRegex(self.b._ignore_of(9000), r"User:.+?/Task/9000/Ignore")
 
-    def test_task_config(self):
-        self.assertRegex(self.b._task_config(69420, "Butter"), r"User:.+?/Task/69420/Butter")
+    def test_config_of(self):
+        self.assertRegex(self.b._config_of(69420, "Butter"), r"User:.+?/Task/69420/Butter")

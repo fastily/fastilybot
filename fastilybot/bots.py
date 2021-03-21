@@ -66,17 +66,6 @@ class Bots(FastilyBotBase):
 
         return out
 
-    def _ignore_of(self, task_num: int) -> str:
-        """Convenience method, get the title of a task's ignore configuration
-
-        Args:
-            task_num (int): The task number to use
-
-        Returns:
-            str: the title of `task_num`'s ignore configuration
-        """
-        return self._task_config(task_num, "Ignore")
-
     def _regex_for(self, title: str) -> str:
         """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
 
@@ -91,18 +80,6 @@ class Bots(FastilyBotBase):
 
         self._regex_cache[title] = (r := r"(?si)\{\{(Template:)??(" + "|".join([self.wiki.nss(t) for t in (self.wiki.what_links_here(title, True) + [title])]) + r").*?\}\}\n?")
         return r
-
-    def _task_config(self, task_num: int, suffix: str) -> str:
-        """Convenience method, get the title of a task configuration
-
-        Args:
-            task_num (int): The task number to use
-            suffix (str): The name of the configuration subpage.  Don't include the `/` prefix.
-
-        Returns:
-            str: The full title of the task configuration
-        """
-        return f"{self.config_prefix}{task_num}/{suffix}"
 
     ##################################################################################################
     ########################################### B O T S ##############################################
@@ -172,7 +149,7 @@ class Bots(FastilyBotBase):
 
         mtc_regex = self._regex_for(T.CTC)
 
-        for s in chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page(self._task_config(2, "Blacklist"))):
+        for s in chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page(self._config_of(2, "Blacklist"))):
             self.wiki.replace_text(s, mtc_regex, summary="BOT: This file does not appear to be eligible for Commons")
 
     def nominated_for_deleteion_on_commons(self):
