@@ -13,7 +13,7 @@ from pwiki.ns import NS
 from pwiki.wiki import Wiki
 
 from .constants import T
-from .core import CQuery, FastilyBotBase, fetch_report
+from .core import CQuery, FastilyBotBase, fetch_report, listify
 
 log = logging.getLogger(__name__)
 
@@ -25,21 +25,6 @@ _UPDATING_REPORT = "BOT: Updating report"
 _DBR = "Wikipedia:Database reports/"
 
 _DMY_REGEX = r"\d{1,2}? (January|February|March|April|May|June|July|August|September|October|November|December) \d{4}?"
-
-
-def _listify(l: Iterable, should_escape: bool = True, header: str = _UPDATED_AT) -> str:
-    """Convenience method which converts and formats an Iterable into wikitext ready to be posted as a finished database report.
-
-    Args:
-        l (Iterable): The Iterable to convert into wikitext
-        should_escape (bool, optional): Set `False` to disable escaping of wikilinks. Defaults to True.
-        header (str, optional): The header to put at the top of the generated wikitext. Defaults to _UPDATED_AT.
-
-    Returns:
-        str: The report wikitext derived from `l`.
-    """
-    c = ":" if should_escape else ""
-    return header + "\n".join((f"*[[{c}{s}]]" for s in l))
 
 
 class Reports(FastilyBotBase):
@@ -62,14 +47,14 @@ class Reports(FastilyBotBase):
 
         Args:
             subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix)
-            text (Union[Iterable, str]): The text to post (`str`) or an `Iterable` (will be passed to `self._listify()`)
+            text (Union[Iterable, str]): The text to post (`str`) or an `Iterable` (will be passed to `listify()`)
             should_escape (bool, optional): Set `False` to disable escaping of wikilinks.  Does nothing if `text is a `str`. Defaults to True.
 
         Returns:
             bool: `True` if the update operation succeeded.
         """
         log.info("Generating report for '%s'", subpage)
-        return self.wiki.edit(_DBR + subpage, text if isinstance(text, str) else _listify(text, should_escape), _UPDATING_REPORT)
+        return self.wiki.edit(_DBR + subpage, text if isinstance(text, str) else listify(text, should_escape, _UPDATED_AT), _UPDATING_REPORT)
 
     def _dump_file_report(self, subpage: str, report_num: int) -> bool:
         """Convenience method which updates a file-based database report using a `fastilybot-toolforge` report.  Equivalent to `self._simple_update(subpage, fetch_report(report_num))`.
@@ -124,7 +109,7 @@ class Reports(FastilyBotBase):
     def malformed_spi_reports(self):
         """Reports malformed SPI reports.  Report 5"""
         subpage = "Malformed SPI Cases"
-        self._simple_update(subpage, _listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._read_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
+        self._simple_update(subpage, listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._read_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
 
     def missing_file_copyright_tags(self):
         """Reports files misisng a copyright tag.  Report 9"""

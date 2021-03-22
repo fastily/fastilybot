@@ -2,7 +2,9 @@
 
 import re
 
-from fastilybot.bots import Bots
+from datetime import timedelta
+
+from fastilybot.bots import _yesterday_and_today, Bots
 
 from .base import WikiTestCase
 
@@ -35,3 +37,7 @@ class TestBots(WikiTestCase):
 
     def test_config_of(self):
         self.assertRegex(self.b._config_of(69420, "Butter"), r"User:.+?/Task/69420/Butter")
+
+    def test_yesterday_and_today(self):
+        yesterday, today = _yesterday_and_today()
+        self.assertEqual(yesterday, today - timedelta(1))  # can't really test this, sanity check only

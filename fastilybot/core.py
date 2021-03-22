@@ -41,6 +41,21 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
     return strip_underscores(text.split("\n"), prefix or "", set) if (text := r.read_text().strip()) else set()
 
 
+def listify(l: Iterable, should_escape: bool = True, header: str = "") -> str:
+    """Convenience method which converts and formats an Iterable into wikitext ready to be posted as a finished database report.
+
+    Args:
+        l (Iterable): The Iterable to convert into wikitext
+        should_escape (bool, optional): Set `False` to disable escaping of wikilinks. Defaults to True.
+        header (str, optional): The header to put at the top of the generated wikitext. Defaults to _UPDATED_AT.
+
+    Returns:
+        str: The report wikitext derived from `l`.
+    """
+    c = ":" if should_escape else ""
+    return header + "\n".join((f"*[[{c}{s}]]" for s in l))
+
+
 def purge_cache():
     """Deletes all cached files created by fastilybot"""
     rmtree(_CACHE_ROOT, True)

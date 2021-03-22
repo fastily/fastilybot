@@ -1,2 +1,2 @@
 rich==9.13.0
-git+https://github.com/fastily/pwiki@ad704ec15147f3e0bcfafad8880023e771a6c71d#egg=pwiki
+git+https://github.com/fastily/pwiki@d835fe1f7295fd733d644cf0076b0566118d922e#egg=pwiki

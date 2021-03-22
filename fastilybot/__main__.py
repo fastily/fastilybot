@@ -85,19 +85,19 @@ def _main():
             elif id == 5:
                 b.find_license_conflicts()
             elif id == 6:
-                pass  # ddnotifier
+                b.dated_deletion_notifier()
             elif id == 7:
-                pass  # findCommonsFFD
+                b.flag_files_nominated_for_deletion_on_commons()
             elif id == 8:
                 b.find_deleted_on_commons()
             elif id == 9:
-                pass  # findKeptComFFD
+                b.flag_files_saved_from_deletion_on_commons()
             elif id == 10:
                 b.flag_orphaned_free_images()
             elif id == 11:
-                pass  # dateNowCommons
+                b.date_now_commons()
             elif id == 12:
-                pass  # ffdNotifier
+                b.ffd_notifier()
             else:
                 log.warning("No such bot task (%d), skipping", id)
 
