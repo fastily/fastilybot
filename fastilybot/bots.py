@@ -122,10 +122,6 @@ class Bots(FastilyBotBase):
             revs = [r.text for r in self.wiki.revisions(uploader_talk, start=yesterday, end=today, include_text=True)]
             if notify_l := [upload for upload in uploads if not any(_file_in_text(upload, t) for t in revs)]:
                 also = listify(notify_l[1:], header='\nAlso:\n') if len(notify_l) > 1 else ''  # f-strings don't like \n in betewen {}
-
-                # print(uploader_talk)
-                # print(f"\n{{{{subst:{talk_template_base}|{notify_l[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}")
-                # print("-"*80)
                 self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{notify_l[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
 
     ##################################################################################################
@@ -135,7 +131,7 @@ class Bots(FastilyBotBase):
     def date_now_commons(self):
         """Fills in the date parameter for instances of `{{Now Commons}}` that are lacking it.  Task 11"""
         ncd_regex = self._regex_for(T.NCD)
-        subst_ncd = f"{{{{subst:{self.wiki.nss(T.NCD)}}}}}"
+        subst_ncd = f"\n{{{{subst:{self.wiki.nss(T.NCD)}}}}}"
 
         for s in self._difference_of(self.wiki.category_members("Category:Wikipedia files with the same name on Wikimedia Commons as of unknown date", NS.FILE), self._category_members_recursive("Category:Wikipedia files reviewed on Wikimedia Commons")):
             self.wiki.replace_text(s, ncd_regex, subst_ncd, "BOT: Dating Now Commons tag")
@@ -167,10 +163,10 @@ class Bots(FastilyBotBase):
         d = {}
         for k, v in (t_table := MQuery.page_text(self.wiki, CQuery.what_transcludes_here(self.wiki, T.NFDC, NS.FILE))).items():
             try:
-                if t := nfdc_regex.search(v).group():
-                    d[k] = str(self.wiki.parse(text=t).templates[0].pop())
+                if (t := nfdc_regex.search(v).group()) and (target := self.wiki.parse(text=t).templates[0]):
+                    d[k] = str(target["1"]) if "1" in target else k
             except Exception:
-                log.warning("Could not parse text of '%s'", k, exc_info=True)
+                log.warning("Could not parse text of '%s'", k)
 
         # normalize
         n_table = OQuery.normalize_titles(self.wiki, list(d.values()))
@@ -179,8 +175,8 @@ class Bots(FastilyBotBase):
         # remove existent files and files that were not actually deleted
         e_table = XQuery.exists_filter(self.com, list(d.values()))  # only pages that exist
         for k, v in d.items():
-            if v not in e_table and next(GQuery.logs(self.com, v, "delete", "delete"), None):
-                self.wiki.edit(k, nfdc_regex.sub(f"{{{{{dc_title}|{self.wiki.nss(v)}}}}}", t_table[k]), "BOT: This file was deleted on Commons")
+            if v not in e_table and next(GQuery.logs(self.com, v, log_action="delete/delete"), None):
+                self.wiki.edit(k, nfdc_regex.sub(f"\n{{{{{dc_title}|{self.wiki.nss(v)}}}}}", t_table[k]), "BOT: This file was deleted on Commons")
 
     def find_license_conflicts(self):
         """Finds files which are labled as both free and non-free.  Task 5"""
@@ -200,15 +196,15 @@ class Bots(FastilyBotBase):
         """Replaces of `{{Nominated for deletion on Commons}}` with `{{Now Commons}}` for files that are no longer up for deletion on Commons.  Task 9 """
         nfdc_regex = self._regex_for(T.NFDC)
 
-        dl = set(CQuery.what_transcludes_here(self.wiki, T.DTT, NS.FILE))
+        dl = set(CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE))
         for title, dupes in MQuery.duplicate_files(self.wiki, CQuery.what_transcludes_here(self.wiki, T.NFDC, NS.FILE), False, True).items():
             if dupes and not dl.intersection(dupes):
-                self.wiki.replace_text(title, nfdc_regex, f"{{{{subst:{T.NCD}|{self.wiki.nss(dupes[0])}}}}}", "BOT: This file is no longer up for deletion on Commons")
+                self.wiki.replace_text(title, nfdc_regex, f"\n{{{{subst:{T.NCD}|{self.wiki.nss(dupes[0])}}}}}", "BOT: This file is no longer up for deletion on Commons")
 
     def flag_orphaned_free_images(self):
         """Finds freely licensed files with no fileusage and tags them with `{{Orphan image}}`.  Task 10"""
         oi_title = self.wiki.nss(T.OI)
-        for s in XQuery.exists_filter(self.wiki, self._difference_of(3, 9, T.B, T.DF, 4, self._ignore_of(10))):
+        for s in XQuery.exists_filter(self.wiki, list(self._difference_of(3, 9, T.B, T.DF, 4, self._ignore_of(10)))):
             self.wiki.edit(s, append=f"\n{{{{{oi_title}}}}}", summary="BOT: this file has no inbound file usage")
 
     def mtc_clerk(self):
@@ -237,7 +233,7 @@ class Bots(FastilyBotBase):
 
         mtc_regex = self._regex_for(T.CTC)
 
-        for s in chain.from_iterable(l.intersection(cat) for cat in self.wiki.links_on_page(self._config_of(2, "Blacklist"))):
+        for s in chain.from_iterable(l.intersection(CQuery.category_members(self.wiki, cat, NS.FILE)) for cat in self.wiki.links_on_page(self._config_of(2, "Blacklist"))):
             self.wiki.replace_text(s, mtc_regex, summary="BOT: This file does not appear to be eligible for Commons")
 
     def nominated_for_deleteion_on_commons(self):
