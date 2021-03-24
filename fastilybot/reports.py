@@ -68,17 +68,16 @@ class Reports(FastilyBotBase):
         """
         return self._simple_update(subpage, fetch_report(report_num))
 
-    def _read_ignore(self, subpage: str, *ns: Union[NS, str]) -> list[str]:
-        """Get the contents of database report's ignore page.  This lists the wikilinks on `subpage`.
+    def _contents_of_ignore(self, subpage: str) -> list[str]:
+        """Convenience method, fetch the links on an ignore page.  Equivalent to `self.wiki.links_on_page(self._ignore_of(subpage))`
 
         Args:
             subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
-            ns (Union[NS, str]): Only return results in these namespaces.  Optional, leave empty to disable.
 
         Returns:
             list[str]: The contents of the ignore page of `subpage`.
         """
-        return self.wiki.links_on_page(f"{_DBR}{subpage}/Ignore", *ns)
+        return self.wiki.links_on_page(self._ignore_of(subpage))
 
     ##################################################################################################
     ######################################## R E P O R T S ###########################################
@@ -87,13 +86,13 @@ class Reports(FastilyBotBase):
     def all_free_license_tags(self):
         """Reports free license tags found on enwp and whether those tags exist on Commons.  Report 3"""
         subpage = "All free license tags"
-        self._simple_update(subpage, l := self._difference_of({t for cat in self.wiki.links_on_page(f"{_DBR}{subpage}/Sources") for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._read_ignore(subpage)), False)
+        self._simple_update(subpage, l := self._difference_of({t for cat in self.wiki.links_on_page(self._config_of(subpage, "Sources")) for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._contents_of_ignore(subpage)), False)
         self._simple_update("Free license tags which do not exist on Commons", [k for k, v in MQuery.exists(self.com, list(l)).items() if not v], False)
 
     def duplicate_on_commons(self):
         """Reports files with a duplicate on Commons.  Report 10"""
         subpage = "Local files with a duplicate on Commons"
-        self._simple_update(subpage, self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), *self._read_ignore(subpage)))
+        self._simple_update(subpage, self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), self._ignore_of(subpage)))
 
     def impossible_daily_deletion(self):
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
@@ -109,13 +108,13 @@ class Reports(FastilyBotBase):
     def malformed_spi_reports(self):
         """Reports malformed SPI reports.  Report 5"""
         subpage = "Malformed SPI Cases"
-        self._simple_update(subpage, listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._read_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
+        self._simple_update(subpage, listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._contents_of_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
 
     def missing_file_copyright_tags(self):
         """Reports files misisng a copyright tag.  Report 9"""
         subpage = "Files without a license tag"
         lcl = set(self.wiki.links_on_page("User:FastilyBot/License categories"))
-        self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, *self._read_ignore(subpage)))).items() if v and lcl.isdisjoint(v)])
+        self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, self._ignore_of(subpage)))).items() if v and lcl.isdisjoint(v)])
 
     def mtc_redirects(self):
         """Updates the MTC! redirect page.  Report 4"""
@@ -149,7 +148,7 @@ class Reports(FastilyBotBase):
     def oversized_fair_use_files(self):
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""
         subpage = "Large fair-use images"
-        self._simple_update(subpage, self._difference_of(7, T.DF, *self._read_ignore(subpage)))
+        self._simple_update(subpage, self._difference_of(7, T.DF, self._ignore_of(subpage)))
 
     def possibly_unsourced_files(self):
         """Reports free files without a machine-readable source.  Report 12"""
@@ -162,7 +161,7 @@ class Reports(FastilyBotBase):
     def shadows_commons_page(self):
         """Reports local files that shadow a commons file or redirect.  Report 1"""
         subpage = "File description pages shadowing a Commons file or redirect"
-        self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, *self._read_ignore(subpage))))
+        self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, self._ignore_of(subpage))))
 
     def transcluded_non_existent_templates(self):
         """Reports non-existent templates that have transclusions.  Report 18"""

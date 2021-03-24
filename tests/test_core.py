@@ -4,7 +4,7 @@ from unittest import TestCase
 
 from pwiki.ns import NS
 
-from fastilybot.core import _CACHE_ROOT, CQuery, fetch_report, XQuery
+from fastilybot.core import _CACHE_ROOT, CQuery, fetch_report, listify, XQuery
 
 from .base import FastilyBotTestCase, WikiTestCase
 
@@ -31,6 +31,12 @@ class TestCore(TestCase):
         self.assertFalse(list(result)[0].startswith("File:"))
 
         target.unlink(missing_ok=True)  # cleanup
+
+    def test_listify(self):
+        l = ["File:Example.png", "File:Foobar.webm", "File:Baz.mp3"]
+        self.assertEqual("\n".join(f"*[[:{s}]]" for s in l), listify(l))
+        self.assertEqual("\n".join(f"*[[{s}]]" for s in l), listify(l, False))
+        self.assertEqual("Hello, World!" + "\n".join(f"*[[{s}]]" for s in l), listify(l, False, "Hello, World!"))
 
 
 class TestBotBase(FastilyBotTestCase):

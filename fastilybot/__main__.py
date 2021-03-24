@@ -118,7 +118,7 @@ def _main():
             elif id == 6:
                 r.orphaned_keep_local()
             elif id == 7:
-                pass  # contained in all_free_license_tags()
+                pass  # part of all_free_license_tags()
             elif id == 8:
                 r.oversized_fair_use_files()
             elif id == 9:

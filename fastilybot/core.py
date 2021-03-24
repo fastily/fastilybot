@@ -47,7 +47,7 @@ def listify(l: Iterable, should_escape: bool = True, header: str = "") -> str:
     Args:
         l (Iterable): The Iterable to convert into wikitext
         should_escape (bool, optional): Set `False` to disable escaping of wikilinks. Defaults to True.
-        header (str, optional): The header to put at the top of the generated wikitext. Defaults to _UPDATED_AT.
+        header (str, optional): The header to put at the top of the generated wikitext. Defaults to "".
 
     Returns:
         str: The report wikitext derived from `l`.
@@ -139,7 +139,7 @@ class FastilyBotBase:
         elif name.startswith("Template:"):
             return CQuery.what_transcludes_here(self.wiki, name, *nsl)
         elif name.startswith(("User:", "Wikipedia:")):
-            return set(chain(*[self._resolve_entity(s, nsl) for s in self.wiki.links_on_page(name)]))
+            return set(chain.from_iterable(self._resolve_entity(s, nsl) for s in self.wiki.links_on_page(name)))
 
     def _config_of(self, sub_title: Union[int, str], suffix: str) -> str:
         """Convenience method, get the title of a configuration page

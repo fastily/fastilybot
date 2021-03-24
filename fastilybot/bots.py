@@ -30,10 +30,6 @@ def _yesterday_and_today() -> tuple[datetime, datetime]:
     return (today := datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)) - timedelta(1), today
 
 
-def _file_in_text(title: str, text: str) -> bool:
-    return bool(re.search(r"(?i)\[\[:" + title.replace(" ", "[ _]") + r"\]\]", text))
-
-
 class Bots(FastilyBotBase):
     """Fastily's Wikipedia bot tasks"""
 
@@ -120,7 +116,7 @@ class Bots(FastilyBotBase):
                 continue
 
             revs = [r.text for r in self.wiki.revisions(uploader_talk, start=yesterday, end=today, include_text=True)]
-            if notify_l := [upload for upload in uploads if not any(_file_in_text(upload, t) for t in revs)]:
+            if notify_l := [upload for upload in uploads if not any(re.search(r"(?i)\[\[:" + upload.replace(" ", "[ _]") + r"\]\]", t) for t in revs)]:
                 also = listify(notify_l[1:], header='\nAlso:\n') if len(notify_l) > 1 else ''  # f-strings don't like \n in betewen {}
                 self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{notify_l[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
 
@@ -164,7 +160,7 @@ class Bots(FastilyBotBase):
         for k, v in (t_table := MQuery.page_text(self.wiki, CQuery.what_transcludes_here(self.wiki, T.NFDC, NS.FILE))).items():
             try:
                 if (t := nfdc_regex.search(v).group()) and (target := self.wiki.parse(text=t).templates[0]):
-                    d[k] = str(target["1"]) if "1" in target else k
+                    d[k] = str(target.get_param("1", k))
             except Exception:
                 log.warning("Could not parse text of '%s'", k)
 
