@@ -117,7 +117,7 @@ class Bots(FastilyBotBase):
 
             revs = [r.text for r in self.wiki.revisions(uploader_talk, start=yesterday, end=today, include_text=True)]
             if notify_l := [upload for upload in uploads if not any(re.search(r"(?i)\[\[:" + upload.replace(" ", "[ _]") + r"\]\]", t) for t in revs)]:
-                also = listify(notify_l[1:], header='\nAlso:\n') if len(notify_l) > 1 else ''  # f-strings don't like \n in betewen {}
+                also = listify(notify_l[1:], header='\n\nAlso:\n') if len(notify_l) > 1 else ''  # f-strings don't like \n in betewen {}
                 self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{notify_l[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
 
     ##################################################################################################
