@@ -13,7 +13,6 @@ import requests
 
 from pwiki.mquery import MQuery
 from pwiki.ns import NS
-from pwiki.query_utils import strip_underscores
 from pwiki.wiki import Wiki
 
 _CACHE_ROOT = Path("/tmp/fastilybot")
@@ -38,7 +37,8 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
         r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
-    return strip_underscores(text.split("\n"), prefix or "", set) if (text := r.read_text().strip()) else set()
+    prefix = prefix or ""  # avoid None
+    return {prefix + s.replace("_", " ") for s in text.split("\n")} if (text := r.read_text().strip()) else set()
 
 
 def listify(l: Iterable, should_escape: bool = True, header: str = "") -> str:

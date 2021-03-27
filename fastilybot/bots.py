@@ -14,6 +14,7 @@ from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.oquery import OQuery
 from pwiki.wiki import Wiki
+from pwiki.wparser import WParser
 
 from .constants import C, T
 from .core import CQuery, FastilyBotBase, fetch_report, listify, XQuery
@@ -110,15 +111,28 @@ class Bots(FastilyBotBase):
         ignore_list = set(CQuery.what_transcludes_here(self.wiki, T.B, NS.USER_TALK))
         d = {k: v for k, v in d.items() if k not in ignore_list}
 
+        # skip talk pages which are redirects
         redirs = OQuery.resolve_redirects(self.wiki, list(d.keys()))
+        d = {k: v for k, v in d.items() if k == redirs[k]}
+
+        img_links = MQuery.what_links_here(self.wiki, list(chain.from_iterable(d.values())))
         for uploader_talk, uploads in d.items():
-            if uploader_talk != redirs[uploader_talk]:  # skip talk pages which are redirects
+            # optimization, uploader pages that already contain a backlink
+            if not (targets := {t for t in uploads if uploader_talk not in img_links[t]}):
                 continue
 
-            revs = [r.text for r in self.wiki.revisions(uploader_talk, start=yesterday, end=today, include_text=True)]
-            if notify_l := [upload for upload in uploads if not any(re.search(r"(?i)\[\[:" + upload.replace(" ", "[ _]") + r"\]\]", t) for t in revs)]:
-                also = listify(notify_l[1:], header='\n\nAlso:\n') if len(notify_l) > 1 else ''  # f-strings don't like \n in betewen {}
-                self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{notify_l[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
+            # aggregate links from all revisions in the past day and remove them if they were in targets
+            if not (targets := targets.difference(chain.from_iterable(WParser.revision_metadata(self.wiki, r, links=True)["links"] for r in self.wiki.revisions(uploader_talk, start=yesterday, end=today)))):
+                continue
+
+            targets = list(targets)
+            also = listify(targets[1:], header='\n\nAlso:\n') if len(targets) > 1 else ''
+
+            # print(uploader_talk)
+            # print(targets)
+            # print("-"*99)
+
+            self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{targets[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
 
     ##################################################################################################
     ########################################### B O T S ##############################################
@@ -182,11 +196,12 @@ class Bots(FastilyBotBase):
     def flag_files_nominated_for_deletion_on_commons(self):
         """Replaces instances of `{{Now Commons}}` with `{{Nominated for deletion on Commons}}` if the duplicate on Commons has been nominated for deletion.  Task 7"""
         ncd_regex = self._regex_for(T.NCD)
+        nfdc_base = self.wiki.nss(T.NFDC)
 
-        dl = set(CQuery.what_transcludes_here(self.wiki, T.DTT, NS.FILE))
+        dl = set(CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE))
         for title, dupes in MQuery.duplicate_files(self.wiki, CQuery.what_transcludes_here(self.wiki, T.NCD, NS.FILE), False, True).items():
             if target := next((s for s in dupes if s in dl), None):
-                self.wiki.replace_text(title, ncd_regex, f"{{{{{T.NFDC}|{self.wiki.nss(target)}}}}}", "BOT: This file has been nominated for deletion on Commons")
+                self.wiki.replace_text(title, ncd_regex, f"\n{{{{{nfdc_base}|{self.wiki.nss(target)}}}}}", "BOT: This file has been nominated for deletion on Commons")
 
     def flag_files_saved_from_deletion_on_commons(self):
         """Replaces of `{{Nominated for deletion on Commons}}` with `{{Now Commons}}` for files that are no longer up for deletion on Commons.  Task 9 """

@@ -12,8 +12,11 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/fastily/fastilybot2",
+    project_urls={
+        "Bug Tracker": "https://github.com/fastily/fastilybot2/issues",
+    },
     include_package_data=True,
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(include=["fastilybot"]),
     install_requires=['pwiki', 'rich'],
     entry_points={
         'console_scripts': [
