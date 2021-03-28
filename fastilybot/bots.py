@@ -127,11 +127,6 @@ class Bots(FastilyBotBase):
 
             targets = list(targets)
             also = listify(targets[1:], header='\n\nAlso:\n') if len(targets) > 1 else ''
-
-            # print(uploader_talk)
-            # print(targets)
-            # print("-"*99)
-
             self.wiki.edit(uploader_talk, append=f"\n\n{{{{subst:{talk_template_base}|{targets[0]}}}}}{also}\n" + "{{subst:User:FastilyBot/BotNote}}", summary="BOT: Some of your file(s) may need attention")
 
     ##################################################################################################
@@ -162,7 +157,7 @@ class Bots(FastilyBotBase):
     def ffd_notifier(self):
         """Notifies uploaders if their files have been nominated for ffd.  Task 12"""
         ffd_snippet = re.compile(r"\|log\s*\=\s*" + (target_suffix := f"{_yesterday_and_today()[0]:%Y %B %-d}"))
-        self._file_notifier("Ffd notice", [title for title, text in MQuery.page_text(self.wiki, self.wiki.links_on_page("Wikipedia:Files for discussion/" + target_suffix, NS.FILE)).items() if ffd_snippet.search(text)])
+        self._file_notifier(self._config_of(12, "Note"), [title for title, text in MQuery.page_text(self.wiki, self.wiki.links_on_page("Wikipedia:Files for discussion/" + target_suffix, NS.FILE)).items() if ffd_snippet.search(text)])
 
     def find_deleted_on_commons(self):
         """Replace instances of `{{Nominated for deletion on Commons}}` on files that have been deleted on Commons with `{{Deleted on Commons}}`.  Task 8"""
