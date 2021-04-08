@@ -20,4 +20,4 @@ dist
 venv_fastilybot
 
 scratch.py
-pwiki.pickle
+*.pickle

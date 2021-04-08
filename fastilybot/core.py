@@ -33,7 +33,7 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
     if not _CACHE_ROOT.exists():
         _CACHE_ROOT.mkdir(exist_ok=True)
 
-    if not (r := _CACHE_ROOT / (r_name := f"report{num}.txt")).exists() or (time() - r.stat().st_mtime) / 3600 > 24:
+    if not (r := _CACHE_ROOT / (r_name := f"report{num}.txt")).exists() or (time() - r.stat().st_mtime) / 3600 > 12:
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
         r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
@@ -74,6 +74,7 @@ class FastilyBotBase:
         self.wiki: Wiki = wiki
         self.config_prefix = config_prefix
 
+        self._regex_cache: dict = {}
         self._com: Wiki = None
 
     def _difference_of(self, *l: Union[int, str, tuple, list]) -> set:
@@ -103,6 +104,21 @@ class FastilyBotBase:
             str: the title of `sub_title`'s ignore configuration
         """
         return self._config_of(sub_title, "Ignore")
+
+    def _regex_for(self, title: str) -> str:
+        """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
+
+        Args:
+            title (str): The template to generate a regex for.
+
+        Returns:
+            str: The regex
+        """
+        if title in self._regex_cache:
+            return self._regex_cache[title]
+
+        self._regex_cache[title] = (r := r"(?si)\n?\{\{(Template:)??(" + "|".join([self.wiki.nss(t) for t in (self.wiki.what_links_here(title, True) + [title])]) + r").*?\}\}")
+        return r
 
     def _resolve_entity(self, e: Union[int, str, tuple, list, set], default_nsl: tuple = (NS.FILE,)) -> Iterable[str]:
         """Takes an object and interprets as follows:

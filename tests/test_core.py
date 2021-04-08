@@ -1,5 +1,7 @@
 """Tests for core modules of fastilybot"""
 
+import re
+
 from unittest import TestCase
 
 from pwiki.ns import NS
@@ -83,6 +85,15 @@ class TestBotBase(FastilyBotTestCase):
 
         # Errors
         self.assertIsNone(self.b._resolve_entity("Help:Foobar"))
+
+    def test_regex_for(self):
+        self.assertEqual(str_regex := self.b._regex_for(target := "Template:FastilyTest"), self.b._regex_for(target))
+        p = re.compile(str_regex)
+
+        self.assertTrue(p.search("{{FastilyTest|A|B|3=C}}"))
+        self.assertTrue(p.search("\n\nFoobar\n{{fastilyTest2|{{Red|Hello, World!}}}}     "))
+        self.assertFalse(p.search("\n\nFoobar\n{{Foobar|{{Blue|baz}}}}     "))
+        self.assertTrue(p.search("\n\nFoobar\n{{Foobar|{{template:fastilyTest2|baz}}}}     "))
 
     def test_difference_of(self):
         self.assertSetEqual({"File:FastilyTest.png"}, self.b._difference_of(("Category:Fastily Test2", None),  ["User:Fastily/Sandbox/Page/2"]))

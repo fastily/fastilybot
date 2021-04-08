@@ -42,7 +42,6 @@ class Bots(FastilyBotBase):
         """
         super().__init__(wiki, f"User:{wiki.whoami()}/Task/")
 
-        self._regex_cache: dict = {}
         self.mtc_tag: str = f"{{{{Now Commons|%s|date={datetime.utcnow():%-d %B %Y}|bot={self.wiki.username}}}}}"
 
     ##################################################################################################
@@ -77,21 +76,6 @@ class Bots(FastilyBotBase):
             visited.add(cat)
 
         return out
-
-    def _regex_for(self, title: str) -> str:
-        """Generates a regex matching a template and its redirects, `title`.  This method is cached, so repeated calls to will not result in new queries to the server.
-
-        Args:
-            title (str): The template to generate a regex for.
-
-        Returns:
-            str: The regex
-        """
-        if title in self._regex_cache:
-            return self._regex_cache[title]
-
-        self._regex_cache[title] = (r := r"(?si)\n?\{\{(Template:)??(" + "|".join([self.wiki.nss(t) for t in (self.wiki.what_links_here(title, True) + [title])]) + r").*?\}\}")
-        return r
 
     def _file_notifier(self, talk_template_base: str, titles: Iterable[str]) -> None:
         """Shared functionality of file deletion notification bots (`dated_deleteion_notifier`, `ffd_notifier`).
