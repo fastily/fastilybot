@@ -13,7 +13,7 @@ from pwiki.ns import NS
 from pwiki.wiki import Wiki
 
 from .constants import T
-from .core import CQuery, FastilyBotBase, fetch_report, listify
+from .core import CQuery, FastilyBotBase, XQuery, fetch_report, listify
 
 log = logging.getLogger(__name__)
 
@@ -86,8 +86,9 @@ class Reports(FastilyBotBase):
     def all_free_license_tags(self):
         """Reports free license tags found on enwp and whether those tags exist on Commons.  Report 3"""
         subpage = "All free license tags"
-        self._simple_update(subpage, l := self._difference_of({t for cat in self.wiki.links_on_page(self._config_of(subpage, "Sources")) for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._contents_of_ignore(subpage)), False)
-        self._simple_update("Free license tags which do not exist on Commons", [k for k, v in MQuery.exists(self.com, list(l)).items() if not v], False)
+        self._simple_update(subpage, l := self._difference_of({t for cat in self.wiki.links_on_page(self._config_of(subpage, "Sources"))
+                            for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._contents_of_ignore(subpage)), False)
+        self._simple_update("Free license tags which do not exist on Commons", XQuery.exists_filter(self.com, l, False), False)
 
     def duplicate_on_commons(self):
         """Reports files with a duplicate on Commons.  Report 10"""
