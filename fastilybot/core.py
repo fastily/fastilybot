@@ -151,9 +151,9 @@ class FastilyBotBase:
         if isinstance(name, int):
             return fetch_report(name, self.wiki.ns_manager.canonical_prefix(nsl[0]) if nsl else None)
         elif name.startswith("Category:"):
-            return CQuery.category_members(self.wiki, name, *nsl)
+            return CQuery.category_members(self.wiki, name, list(nsl))
         elif name.startswith("Template:"):
-            return CQuery.what_transcludes_here(self.wiki, name, *nsl)
+            return CQuery.what_transcludes_here(self.wiki, name, list(nsl))
         elif name.startswith(("User:", "Wikipedia:")):
             return set(chain.from_iterable(self._resolve_entity(s, nsl) for s in self.wiki.links_on_page(name)))
 
@@ -189,56 +189,59 @@ class CQuery:
     """Collection of methods for performing queries on a Wiki and caching the results."""
 
     @staticmethod
-    def _do_query(wiki: Wiki, fn: Callable[..., list[str]], title: str, nsl: list[Union[NS, str]] = [], expiry: int = 10) -> list[str]:
+    def _do_query(wiki: Wiki, fn: Callable[..., list[str]], title: str, nsl: Union[list[Union[NS, str]], NS, str] = [], expiry: int = 10) -> list[str]:
         """Performs a query and caches the result on disk.  If a matching, non-expired cached query was found, then that result will be returned.
 
         Args:
             wiki (Wiki): The Wiki object to use
             fn (Callable[..., list[str]]): The method to call on cache miss.
             title (str): The title to query
-            nsl (list[Union[NS, str]], optional): If set, only return results in these namespaces.  Defaults to [].
+            nsl (Union[list[Union[NS, str]], NS, str], optional): If set, only return results in these namespaces.  Defaults to [].
             expiry (int, optional): The amount of time, in minutes, before the cached result should be considered outdated. Defaults to 10.
 
         Returns:
             list[str]: The result of the query
         """
+        if not isinstance(nsl, list):
+            nsl = [nsl]
+
         (p := _CACHE_ROOT / wiki.domain / wiki.which_ns(title)).mkdir(parents=True, exist_ok=True)
         cache = p / (wiki.nss(title) + ("_" + "_".join(sorted([wiki.ns_manager.stringify(n) for n in nsl])) if nsl else "") + ".txt")
 
         if not cache.exists() or (time() - cache.stat().st_mtime) / 60 > expiry:
             log.debug("Cache miss for '%s', downloading new copy...", title)
-            cache.write_text("\n".join(l := fn(title, *nsl)))
+            cache.write_text("\n".join(l := fn(title, nsl)))
             return l
 
         return out.split("\n") if (out := cache.read_text().strip()) else []  # handle empty files
 
     @staticmethod
-    def category_members(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
+    def category_members(wiki: Wiki, title: str, ns: Union[list[Union[NS, str]], NS, str] = []) -> list[str]:
         """Fetches the elements in a category.
 
         Args:
             wiki (Wiki): The Wiki object to use
             title (str): The title of the category to fetch elements from.  Must include `Category:` prefix.
-            ns (Union[NS, str], optional): Only return results that are in these namespaces. Optional, leave blank to disable
+            ns (Union[list[Union[NS, str]], NS, str], optional): Only return results that are in these namespaces. Optional, leave blank to disable
 
         Returns:
             list[str]: a `list` containing `title`'s category members.
         """
-        return CQuery._do_query(wiki, wiki.category_members, title, list(ns))
+        return CQuery._do_query(wiki, wiki.category_members, title, ns)
 
     @staticmethod
-    def what_transcludes_here(wiki: Wiki, title: str, *ns: Union[NS, str]) -> list[str]:
+    def what_transcludes_here(wiki: Wiki, title: str, ns: Union[list[Union[NS, str]], NS, str]=[]) -> list[str]:
         """Fetch pages that translcude a page.  If querying for templates, you must include the `Template:` prefix.
 
         Args:
             wiki (Wiki): The Wiki object to use
             title (str): The title to query
-            ns (Union[NS, str]): Only return results in these namespaces.  Optional, leave empty to disable.
+            ns (Union[list[Union[NS, str]], NS, str], optional): Restrict returned output to titles in these namespaces. Optional, set to empty list to disable. Defaults to [].
 
         Returns:
             list[str]: The list of pages that transclude `title`.
         """
-        return CQuery._do_query(wiki, wiki.what_transcludes_here, title, list(ns))
+        return CQuery._do_query(wiki, wiki.what_transcludes_here, title, ns)
 
 
 class XQuery:

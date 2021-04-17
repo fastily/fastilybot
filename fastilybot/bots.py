@@ -127,7 +127,7 @@ class Bots(FastilyBotBase):
 
     def dated_deletion_notifier(self):
         """Notifies uploaders if their files have been nominated for dated deletion.  Task 6"""
-        idk_l = set(chain(*MQuery.what_transcludes_here(self.wiki, self.wiki.links_on_page(self._ignore_of(6))).values()))
+        idk_l = set(chain.from_iterable(MQuery.what_transcludes_here(self.wiki, self.wiki.links_on_page(self._ignore_of(6))).values()))
 
         target_suffix = f"{_yesterday_and_today()[0]:%-d %B %Y}"
 
