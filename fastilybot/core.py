@@ -20,6 +20,19 @@ _CACHE_ROOT = Path("/tmp/fastilybot")
 log = logging.getLogger(__name__)
 
 
+def cache_hit(p: Path, max_age: int) -> bool:
+    """Checks if `max_age` seconds have occured since the last modified time of `p`. 
+
+    Args:
+        p (Path): The path to check
+        max_age (int): The maximum number of seconds that have elapsed since the last modified time of `p` to consider the cache valid.
+
+    Returns:
+        bool: True if `p` exists and `max_age` is greater than the number of seconds elapsed since `p`'s last modified time.
+    """
+    return p.exists() and time() - p.stat().st_mtime <= max_age
+
+
 def fetch_report(num: int, prefix: str = "File:") -> set:
     """Fetches the specified numbered report from `fastilybot-reports` on toolforge.  Downloaded reports are cached for 24h.
 
@@ -33,7 +46,7 @@ def fetch_report(num: int, prefix: str = "File:") -> set:
     if not _CACHE_ROOT.exists():
         _CACHE_ROOT.mkdir(exist_ok=True)
 
-    if not (r := _CACHE_ROOT / (r_name := f"report{num}.txt")).exists() or (time() - r.stat().st_mtime) / 3600 > 12:
+    if not cache_hit(r := _CACHE_ROOT / (r_name := f"report{num}.txt"), 3600*12):
         log.debug("Cached copy of '%s' is missing or out of date, downloading a new copy...", r_name)
         r.write_bytes(requests.get("https://fastilybot-reports.toolforge.org/r/" + r_name).content)
 
@@ -206,9 +219,7 @@ class CQuery:
             nsl = [nsl]
 
         (p := _CACHE_ROOT / wiki.domain / wiki.which_ns(title)).mkdir(parents=True, exist_ok=True)
-        cache = p / (wiki.nss(title) + ("_" + "_".join(sorted([wiki.ns_manager.stringify(n) for n in nsl])) if nsl else "") + ".txt")
-
-        if not cache.exists() or (time() - cache.stat().st_mtime) / 60 > expiry:
+        if not cache_hit(cache := p / (wiki.nss(title) + ("_" + "_".join(sorted([wiki.ns_manager.stringify(n) for n in nsl])) if nsl else "") + ".txt"), 60*expiry):
             log.debug("Cache miss for '%s', downloading new copy...", title)
             cache.write_text("\n".join(l := fn(title, nsl)))
             return l
@@ -230,7 +241,7 @@ class CQuery:
         return CQuery._do_query(wiki, wiki.category_members, title, ns)
 
     @staticmethod
-    def what_transcludes_here(wiki: Wiki, title: str, ns: Union[list[Union[NS, str]], NS, str]=[]) -> list[str]:
+    def what_transcludes_here(wiki: Wiki, title: str, ns: Union[list[Union[NS, str]], NS, str] = []) -> list[str]:
         """Fetch pages that translcude a page.  If querying for templates, you must include the `Template:` prefix.
 
         Args:

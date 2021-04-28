@@ -2,17 +2,29 @@
 
 import re
 
+from pathlib import Path
+from tempfile import NamedTemporaryFile
+from time import sleep
 from unittest import TestCase
 
 from pwiki.ns import NS
 
-from fastilybot.core import _CACHE_ROOT, CQuery, fetch_report, listify, XQuery
+from fastilybot.core import cache_hit, _CACHE_ROOT, CQuery, fetch_report, listify, XQuery
 
 from .base import FastilyBotTestCase, WikiTestCase
 
 
 class TestCore(TestCase):
     """Tests for core's top level methods"""
+
+    def cache_hit(self):
+        self.assertFalse(cache_hit(Path("/d/o/e/s/n/o/t/e/x/i/s/t"), 42))
+
+        with NamedTemporaryFile() as f:
+            sleep(1.5)
+            p = Path(f.name)
+            self.assertFalse(cache_hit(Path(f.name), 1))
+            self.assertTrue(cache_hit(p, 1000000))
 
     def test_fetch_report(self):
         (target := _CACHE_ROOT / "report2.txt").unlink(missing_ok=True)  # clear test env
