@@ -17,7 +17,7 @@ from .base import FastilyBotTestCase, WikiTestCase
 class TestCore(TestCase):
     """Tests for core's top level methods"""
 
-    def cache_hit(self):
+    def test_cache_hit(self):
         self.assertFalse(cache_hit(Path("/d/o/e/s/n/o/t/e/x/i/s/t"), 42))
 
         with NamedTemporaryFile() as f:

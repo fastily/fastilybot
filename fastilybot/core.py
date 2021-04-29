@@ -259,7 +259,7 @@ class XQuery:
     """Collection of extended Wiki queries"""
 
     @staticmethod
-    def exists_filter(wiki: Wiki, titles: Iterable[str], existent: bool = True) -> set:
+    def exists_filter(wiki: Wiki, titles: Iterable[str], existent: bool = True) -> set[str]:
         """Check if elements in `titles` exist, then filter the results by `existent`.
 
         Args:
@@ -268,6 +268,6 @@ class XQuery:
             existent (bool, optional): Set `True` to only return titles that exist.  Set `False` to only fetch titles that don't exist. Defaults to True.
 
         Returns:
-            set: The list of titles filtered by `existent`
+            set[str]: The list of titles filtered by `existent`
         """
         return {k for k, v in MQuery.exists(wiki, titles if isinstance(titles, list) else list(titles)).items() if existent == v}
