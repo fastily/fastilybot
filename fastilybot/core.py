@@ -14,8 +14,10 @@ import requests
 from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.wiki import Wiki
+from pwiki.wgen import load_px
 
 _CACHE_ROOT = Path("/tmp/fastilybot")
+_COMMONS = "commons.wikimedia.org"
 
 log = logging.getLogger(__name__)
 
@@ -78,10 +80,10 @@ class FastilyBotBase:
     """Base class for FastilyBot bot types"""
 
     def __init__(self, wiki: Wiki, config_prefix: str = None) -> None:
-        """Initializer, creates a new FastilyBotBase
+        """Initializer, creates a new FastilyBotBase. 
 
         Args:
-            wiki (Wiki): The Wiki object to use
+            wiki (Wiki): The Wiki object to use. `wiki` is assumed to be logged-in
             config_prefix (str, optional): Config prefix title for extending classes to use.  Does nothing otherwise. Defaults to None.
         """
         self.wiki: Wiki = wiki
@@ -193,7 +195,7 @@ class FastilyBotBase:
             Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
         """
         if not self._com:
-            self._com = Wiki("commons.wikimedia.org", cookie_jar=None)
+            self._com = Wiki(_COMMONS, u := self.wiki.username, load_px()[u]) if self.wiki.is_logged_in else Wiki(_COMMONS, cookie_jar=None)
 
         return self._com
 
