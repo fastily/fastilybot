@@ -79,15 +79,17 @@ def purge_cache():
 class FastilyBotBase:
     """Base class for FastilyBot bot types"""
 
-    def __init__(self, wiki: Wiki, config_prefix: str = None) -> None:
+    def __init__(self, wiki: Wiki, config_prefix: str = None, auto_login: bool = False) -> None:
         """Initializer, creates a new FastilyBotBase. 
 
         Args:
             wiki (Wiki): The Wiki object to use. `wiki` is assumed to be logged-in
             config_prefix (str, optional): Config prefix title for extending classes to use.  Does nothing otherwise. Defaults to None.
+            auto_login (bool, optional): Enable automatic login of the `com` `Wiki` object, based on the credentials in `wiki`, if applicable. Defaults to False.
         """
         self.wiki: Wiki = wiki
-        self.config_prefix = config_prefix
+        self.config_prefix: str = config_prefix
+        self._auto_login: bool = auto_login
 
         self._regex_cache: dict = {}
         self._com: Wiki = None
@@ -195,7 +197,7 @@ class FastilyBotBase:
             Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
         """
         if not self._com:
-            self._com = Wiki(_COMMONS, u := self.wiki.username, load_px()[u]) if self.wiki.is_logged_in else Wiki(_COMMONS, cookie_jar=None)
+            self._com = Wiki(_COMMONS, u := self.wiki.username, load_px()[u]) if self._auto_login and self.wiki.is_logged_in else Wiki(_COMMONS, cookie_jar=None)
 
         return self._com
 
