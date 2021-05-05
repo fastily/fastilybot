@@ -1,4 +1,4 @@
-PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PATH=/home/fastilybot/.local/bin:/home/fastilybot/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/games:/usr/games
 
 ###############
 ## BOT TASKS ##
@@ -6,15 +6,15 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 ## Daily
 # (dated_deletion_notifier, flag_files_nominated_for_deletion_on_commons, date_now_commons, ffd_notifier)
-00 10 * * * cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color -b 6,7,11,12 > /home/fastilybot/logs/bots-daily.txt 2>&1
+00 10 * * * fastilybot --no-color -b 6,7,11,12 > /home/fastilybot/logs/bots-daily.txt 2>&1
 
 ## Tri-Weekly
 # (mtc_clerk, remove_bad_mtc)
-00 11 * * 1,3,5 cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color -b 1,2 > /home/fastilybot/logs/bots-tri-weekly.txt 2>&1
+00 11 * * 1,3,5 fastilybot --no-color -b 1,2 > /home/fastilybot/logs/bots-tri-weekly.txt 2>&1
 
 ## Weekly
 # (untag_unorphaned_images, find_license_conflicts, find_deleted_on_commons, flag_files_saved_from_deletion_on_commons, flag_orphaned_free_images)
-00 12 * * 1 cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color -b 4,5,8,9,10 > /home/fastilybot/logs/bots-weekly.txt 2>&1
+00 12 * * 1 fastilybot --no-color -b 4,5,8,9,10 > /home/fastilybot/logs/bots-weekly.txt 2>&1
 
 
 ##################
@@ -22,7 +22,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ##################
 
 ## Weekly
-30 14 * * 1 cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color -r 1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17 > /home/fastilybot/logs/reports-weekly.txt 2>&1
+30 14 * * 1 fastilybot --no-color -r 1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17 > /home/fastilybot/logs/reports-weekly.txt 2>&1
 
 ## Daily
-00 15 * * * cd fastilybot2 && /home/fastilybot/venv_fastilybot/bin/python -m fastilybot --no-color -r 18 > /home/fastilybot/logs/reports-daily.txt 2>&1
+00 15 * * * fastilybot --no-color -r 18 > /home/fastilybot/logs/reports-daily.txt 2>&1
