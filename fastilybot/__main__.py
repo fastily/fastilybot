@@ -70,6 +70,10 @@ def _main():
 
     wiki = Wiki(username=args.u, password=load_px().get(args.u))
 
+    if wiki.exists(f"User:{wiki.username}/shutoff"):
+        log.info("killswitch triggered, exiting...")
+        return
+
     if bot_ids := _determine_tasks(args.b):
         b = Bots(wiki)
 
