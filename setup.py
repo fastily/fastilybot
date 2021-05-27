@@ -4,16 +4,16 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="fastilybot2",
-    version="0.0.1",
+    name="fastilybot",
+    version="2.0.0",
     author="Fastily",
     author_email="fastily@users.noreply.github.com",
     description="Fastily's Wikipedia Bots",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/fastily/fastilybot2",
+    url="https://github.com/fastily/fastilybot",
     project_urls={
-        "Bug Tracker": "https://github.com/fastily/fastilybot2/issues",
+        "Bug Tracker": "https://github.com/fastily/fastilybot/issues",
     },
     include_package_data=True,
     packages=setuptools.find_packages(include=["fastilybot"]),
