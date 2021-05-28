@@ -8,5 +8,27 @@ Fastily's Wikipedia Bots.
 
 This repository contains the rewritten and improved successor to the original [fastilybot](https://github.com/fastily/fastilybot-old).
 
+### Install
+```bash
+pip install fastilybot
+```
+
+### Usage
+```
+usage: __main__.py [-h] [-u username] [-b bot_id] [-r report_id] [--all-reports] [--no-color] [--purge-cache] [--wgen]
+
+FastilyBot CLI
+
+optional arguments:
+  -h, --help     show this help message and exit
+  -u username    the username to use
+  -b bot_id      comma deliminated ids of bot tasks to run
+  -r report_id   comma deliminated ids of report tasks to run
+  --all-reports  runs all possible reports tasks
+  --no-color     disables colored log output
+  --purge-cache  delete all cached files created by fastilybot and exit
+  --wgen         run wgen password manager
+```
+
 ### See Also
 * [toollabs reports](https://tools.wmflabs.org/fastilybot-reports/)
