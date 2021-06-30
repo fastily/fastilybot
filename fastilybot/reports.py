@@ -95,6 +95,10 @@ class Reports(FastilyBotBase):
         subpage = "Local files with a duplicate on Commons"
         self._simple_update(subpage, self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), self._ignore_of(subpage)))
 
+    def flickr_files(self):
+        """Reports free files with links to Flickr.  Report 19"""
+        self._simple_update("Free files which link to Flickr", self._difference_of(18, T.KL))
+
     def impossible_daily_deletion(self):
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
         p = re.compile(r".+?" + _DMY_REGEX)

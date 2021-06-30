@@ -145,6 +145,8 @@ def _main():
                 r.orphaned_pdfs()
             elif id == 18:
                 r.transcluded_non_existent_templates()
+            elif id == 19:
+                r.flickr_files()
             else:
                 log.warning("No such report id (%d), skipping", id)
 
