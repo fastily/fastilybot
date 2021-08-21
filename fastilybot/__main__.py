@@ -116,7 +116,7 @@ def _main():
             elif id == 3:
                 r.all_free_license_tags()
             elif id == 4:
-                r.mtc_redirects()
+                pass
             elif id == 5:
                 r.malformed_spi_reports()
             elif id == 6:

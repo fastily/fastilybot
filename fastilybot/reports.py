@@ -121,15 +121,6 @@ class Reports(FastilyBotBase):
         lcl = set(self.wiki.links_on_page("User:FastilyBot/License categories"))
         self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, self._ignore_of(subpage)))).items() if v and lcl.isdisjoint(v)])
 
-    def mtc_redirects(self):
-        """Updates the MTC! redirect page.  Report 4"""
-        base = "Wikipedia:MTC!/Redirects"
-        d = MQuery.what_links_here(self.wiki, list(set(self.wiki.links_on_page(_DBR + "All free license tags") + self.wiki.links_on_page(base + "/IncludeAlso")
-                                                       ).difference(self.wiki.links_on_page(_DBR + "Free license tags which do not exist on Commons"))), True)
-        body = "\n".join(["|".join([self.wiki.nss(t) for t in ([k] + v)]) for k, v in d.items()])
-
-        self.wiki.edit(base, f"<pre>\n{body}\n</pre>", _UPDATING_REPORT)
-
     def non_free_pdfs(self):
         """Reports non-free PDFs.  Report 15"""
         self._dump_file_report("Non-free PDFs", 15)
