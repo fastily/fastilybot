@@ -102,6 +102,12 @@ def _main():
                 b.date_now_commons()
             elif id == 12:
                 b.ffd_notifier()
+            elif id == 13:
+                pass  # blanket approval for Reports
+            elif id == 14:
+                pass  # see Task 6
+            elif id == 15:
+                b.keep_local_now_commons()
             else:
                 log.warning("No such bot task (%d), skipping", id)
 

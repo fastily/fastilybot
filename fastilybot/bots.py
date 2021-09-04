@@ -197,6 +197,13 @@ class Bots(FastilyBotBase):
         for s in XQuery.exists_filter(self.wiki, list(self._difference_of(3, 9, T.B, T.DF, 4, self._ignore_of(10)))):
             self.wiki.edit(s, append=f"\n{{{{{oi_title}}}}}", summary="BOT: this file has no inbound file usage")
 
+    def keep_local_now_commons(self):
+        """Removes instances of `{{Now Commons}}` where a request for `{{Keep local}}` has also been made.  Task 15"""
+        ncd_regex = self._regex_for(T.NCD)
+
+        for s in set(CQuery.what_transcludes_here(self.wiki, T.KL, [NS.FILE])).intersection(CQuery.category_members(self.wiki, "Category:All Wikipedia files with the same name on Wikimedia Commons", [NS.FILE])):
+            self.wiki.replace_text(s, ncd_regex, summary="BOT: Respecting request to [[Template:Keep local|keep local]], local enwp copy should be retained")
+
     def mtc_clerk(self):
         """Find and fix tags for files tagged for transfer to Commons which have already transferred.  Task 1"""
         ncd_l = set(CQuery.what_transcludes_here(self.wiki, T.NCD))
