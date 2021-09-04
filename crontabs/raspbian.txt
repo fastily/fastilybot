@@ -6,7 +6,7 @@ PATH=/home/fastilybot/.local/bin:/home/fastilybot/bin:/usr/local/sbin:/usr/local
 
 ## Daily
 # (dated_deletion_notifier, flag_files_nominated_for_deletion_on_commons, date_now_commons, ffd_notifier)
-00 10 * * * fastilybot --no-color -b 6,7,11,12 > /home/fastilybot/logs/bots-daily.txt 2>&1
+00 10 * * * fastilybot --no-color -b 6,7,11,12,15 > /home/fastilybot/logs/bots-daily.txt 2>&1
 
 ## Tri-Weekly
 # (mtc_clerk, remove_bad_mtc)
