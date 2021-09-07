@@ -202,7 +202,7 @@ class Bots(FastilyBotBase):
         ncd_regex = self._regex_for(T.NCD)
 
         for s in set(CQuery.what_transcludes_here(self.wiki, T.KL, [NS.FILE])).intersection(CQuery.category_members(self.wiki, "Category:All Wikipedia files with the same name on Wikimedia Commons", [NS.FILE])):
-            self.wiki.replace_text(s, ncd_regex, summary="BOT: Respecting request to [[Template:Keep local|keep local]], local enwp copy should be retained")
+            self.wiki.replace_text(s, ncd_regex, summary="BOT: [[Template:Keep local|Keep local]] detected, enwp copy should be retained")
 
     def mtc_clerk(self):
         """Find and fix tags for files tagged for transfer to Commons which have already transferred.  Task 1"""
