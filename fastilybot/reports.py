@@ -18,7 +18,7 @@ from .core import CQuery, FastilyBotBase, XQuery, fetch_report, listify
 log = logging.getLogger(__name__)
 
 
-_UPDATED_AT = "This report updated at <onlyinclude>~~~~~</onlyinclude>\n{{Bots|deny=luckyrename}}\n"
+_UPDATED_AT = "This report updated at <onlyinclude>~~~~~</onlyinclude> {{Bots|deny=luckyrename}}\n"
 
 _UPDATING_REPORT = "BOT: Updating report"
 
