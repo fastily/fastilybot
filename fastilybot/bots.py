@@ -22,11 +22,11 @@ from .core import CQuery, FastilyBotBase, fetch_report, listify, XQuery
 log = logging.getLogger(__name__)
 
 
-def _yesterday_and_today() -> tuple[datetime, datetime]:
+def _yesterday_and_today() -> tuple[datetime]:
     """Gets the `datetime` of yesterday and today in UTC and truncates the times to midnight.
 
     Returns:
-        tuple[datetime, datetime]: A tuple where the first element is the yesterday `datetime` and the second element is the today `datetime`.
+        tuple[datetime]: A tuple where the first element is the yesterday `datetime` and the second element is the today `datetime`.
     """
     return (today := datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)) - timedelta(1), today
 
