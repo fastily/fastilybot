@@ -89,7 +89,7 @@ def _main():
             elif id == 5:
                 b.find_license_conflicts()
             elif id == 6:
-                b.dated_deletion_notifier()
+                b.dated_file_deletion_notifier()
             elif id == 7:
                 b.flag_files_nominated_for_deletion_on_commons()
             elif id == 8:
@@ -105,9 +105,11 @@ def _main():
             elif id == 13:
                 pass  # blanket approval for Reports
             elif id == 14:
-                pass  # see Task 6
+                b.prod_notifier()
             elif id == 15:
                 b.keep_local_now_commons()
+            elif id == 16:
+                pass  # see Task 14
             else:
                 log.warning("No such bot task (%d), skipping", id)
 
