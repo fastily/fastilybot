@@ -220,7 +220,7 @@ class Bots(FastilyBotBase):
 
     def prod_notifier(self) -> None:
         """Notifies page authors if their files have been PROD'd.  Task 14 & 16."""
-        self._deletion_notifier("Proposed deletion notify", self.wiki.category_members(f"Category:Proposed deletion/{Bots._DD_TARGET_SUFFIX}", [NS.MAIN, NS.FILE]))
+        self._deletion_notifier("Proposed deletion notify", self.wiki.category_members(f"Category:Proposed deletion as of {Bots._DD_TARGET_SUFFIX}", [NS.MAIN, NS.FILE]))
 
     def remove_bad_mtc(self) -> None:
         """Removes the MTC tag from files which do not appear to be eligible for Commons.  Task 2"""
