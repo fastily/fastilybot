@@ -21,6 +21,8 @@ from .core import CQuery, FastilyBotBase, fetch_report, listify, XQuery
 
 log = logging.getLogger(__name__)
 
+_BOT_NOTE = "'''{{Subst:Red|This bot DID NOT nominate any of your contributions for deletion; please refer to the [[Help:Introduction to navigating Wikipedia/4|history]] of each individual page for details.}}''' Thanks, ~~~~"
+
 
 def _yesterday_and_today() -> tuple[datetime]:
     """Gets the `datetime` of yesterday and today in UTC and truncates the times to midnight.
@@ -77,13 +79,12 @@ class Bots(FastilyBotBase):
 
         return out
 
-    def _deletion_notifier(self, talk_template_base: str, titles: Iterable[str], type_label: str = "file") -> None:
-        """Shared functionality of deletion notification bots (`dated_deleteion_notifier`, `ffd_notifier`, `prod_notifier`).
+    def _deletion_notifier(self, talk_template_base: str, titles: Iterable[str]) -> None:
+        """Shared functionality of deletion notification bots (`dated_file_deletion_notifier`, `ffd_notifier`, `prod_notifier`).
 
         Args:
             talk_template_base (str): The template to add to the talk pages of users to notifiy.  Do not include `Template:` prefix.
             titles (Iterable[str]): The titles to process.
-            type_label (str): The namespace page label to use in the resulting message. Defaults to "file".
         """
         yesterday, today = _yesterday_and_today()
 
@@ -112,7 +113,7 @@ class Bots(FastilyBotBase):
 
             targets = list(targets)
             also = listify(targets[1:], header='\n\nAlso:\n') if len(targets) > 1 else ''
-            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|{targets[0]}}}}}{also}\n{{{{subst:User:FastilyBot/BotNote|{type_label}}}}}", summary=f"BOT: Some of your {type_label}(s) may need attention")
+            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|{targets[0]}}}}}{also}\n\n{_BOT_NOTE}", summary=f"BOT: Some of your contributions may require attention")
 
     ##################################################################################################
     ########################################### B O T S ##############################################
@@ -217,18 +218,9 @@ class Bots(FastilyBotBase):
             if (n := re.sub(mtc_regex, "", texts[k])) != texts[k]:
                 self.wiki.edit(k, ("" if k in ncd_l else mtc_tag % v + "\n") + n, "BOT: This file has already been copied to Commons")
 
-    def nominated_for_deleteion_on_commons(self) -> None:
-        """Replaces `{{Now Commons}}` locally with `{{Nominated for deletion on Commons}}` if the file is nominated for deletion on Commons.  Task 7"""
-        ncd_regex = self._regex_for(T.NCD)
-        l = set(CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE))
-
-        for k, v in MQuery.duplicate_files(self.wiki, CQuery.what_transcludes_here(self.wiki, T.NCD, NS.FILE), False, True).items():
-            if v and v[0] in l:
-                self.wiki.replace_text(k, ncd_regex, f"{{{{Nominated for deletion on Commons|{self.wiki.nss(v[0])}}}}}", "BOT: File is up for deletion on Commons")
-
     def prod_notifier(self) -> None:
         """Notifies page authors if their files have been PROD'd.  Task 14 & 16."""
-        self._deletion_notifier("Proposed deletion notify", self.wiki.category_members(f"Category:Proposed deletion/{Bots._DD_TARGET_SUFFIX}", [NS.MAIN, NS.FILE]), "page")
+        self._deletion_notifier("Proposed deletion notify", self.wiki.category_members(f"Category:Proposed deletion/{Bots._DD_TARGET_SUFFIX}", [NS.MAIN, NS.FILE]))
 
     def remove_bad_mtc(self) -> None:
         """Removes the MTC tag from files which do not appear to be eligible for Commons.  Task 2"""
