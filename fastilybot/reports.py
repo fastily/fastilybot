@@ -101,10 +101,9 @@ class Reports(FastilyBotBase):
 
     def impossible_daily_deletion(self) -> None:
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
+        subpage = "Files for daily deletion with an impossible date"
         p = re.compile(r".+?" + _DMY_REGEX)
-        self._simple_update("Files for daily deletion with an impossible date",
-                            set(chain.from_iterable(self._difference_of(all_cat, *[c for c in self.wiki.category_members(cat, NS.CATEGORY) if p.match(c)])
-                                                    for cat, all_cat in json.loads(self.wiki.page_text("User:FastilyBot/Daily Deletion Categories")).items())))
+        self._simple_update(subpage, set(chain.from_iterable(self._difference_of(all_cat, *[c for c in self.wiki.category_members(cat, NS.CATEGORY) if p.match(c)]) for cat, all_cat in json.loads(self.wiki.page_text(self._config_of(subpage, "Sources"))).items())))
 
     def low_resolution_free_files(self) -> None:
         """Reports low resolution free files.  Report 11"""
@@ -118,7 +117,7 @@ class Reports(FastilyBotBase):
     def missing_file_copyright_tags(self) -> None:
         """Reports files misisng a copyright tag.  Report 9"""
         subpage = "Files without a license tag"
-        lcl = set(self.wiki.links_on_page("User:FastilyBot/License categories"))
+        lcl = set(self.wiki.links_on_page(self._config_of(subpage, "Allow")))
         self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, self._ignore_of(subpage)))).items() if v and lcl.isdisjoint(v)])
 
     def non_free_pdfs(self) -> None:
