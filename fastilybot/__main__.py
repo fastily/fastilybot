@@ -124,7 +124,7 @@ def _main():
             elif id == 3:
                 r.all_free_license_tags()
             elif id == 4:
-                pass
+                r.orphaned_timed_text()
             elif id == 5:
                 r.malformed_spi_reports()
             elif id == 6:
@@ -155,6 +155,10 @@ def _main():
                 r.transcluded_non_existent_templates()
             elif id == 19:
                 r.flickr_files()
+            elif id == 20:
+                r.large_ip_talk_pages()
+            elif id == 21:
+                r.large_user_talk_pages()
             else:
                 log.warning("No such report id (%d), skipping", id)
 

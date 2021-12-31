@@ -105,6 +105,14 @@ class Reports(FastilyBotBase):
         p = re.compile(r".+?" + _DMY_REGEX)
         self._simple_update(subpage, set(chain.from_iterable(self._difference_of(all_cat, *[c for c in self.wiki.category_members(cat, NS.CATEGORY) if p.match(c)]) for cat, all_cat in json.loads(self.wiki.page_text(self._config_of(subpage, "Sources"))).items())))
 
+    def large_ip_talk_pages(self) -> None:
+        """Reports unusually large IP talk pages.  Report 20"""
+        self._simple_update("Unusually large IP talk pages", fetch_report(20, "User talk:"), False)
+
+    def large_user_talk_pages(self) -> None:
+        """Reports unusually large user talk pages.  Report 21"""
+        self._simple_update("Unusually large user talk pages", fetch_report(21, "User talk:"), False)
+
     def low_resolution_free_files(self) -> None:
         """Reports low resolution free files.  Report 11"""
         self._simple_update("Orphaned low-resolution free files", self._difference_of(10, "Category:Wikipedia images available as SVG", "Category:All files proposed for deletion"))
@@ -112,7 +120,12 @@ class Reports(FastilyBotBase):
     def malformed_spi_reports(self) -> None:
         """Reports malformed SPI reports.  Report 5"""
         subpage = "Malformed SPI Cases"
-        self._simple_update(subpage, listify(self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._contents_of_ignore(subpage)), False, "{{/Header}}\n" + _UPDATED_AT))
+
+        # fend off false positives
+        for title, text in MQuery.page_text(self.wiki, list(l := self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._contents_of_ignore(subpage)))).items():
+            self.wiki.edit(title, text, "null edit")
+
+        self._simple_update(subpage, listify(l, False, "{{/Header}}\n" + _UPDATED_AT))
 
     def missing_file_copyright_tags(self) -> None:
         """Reports files misisng a copyright tag.  Report 9"""
@@ -139,6 +152,10 @@ class Reports(FastilyBotBase):
     def orphaned_keep_local(self) -> None:
         """Reports orphaned freely licensed files tagged keep local.  Report 6"""
         self._simple_update("Orphaned free files tagged keep local", fetch_report(9).intersection(CQuery.what_transcludes_here(self.wiki, T.KL, NS.FILE)))
+
+    def orphaned_timed_text(self) -> None:
+        """Reports pages in the Timed Text namespace without a corresponding File page.  Report 4"""
+        self._simple_update("Timed Text without a corresponding File", fetch_report(19, "TimedText:"), False)
 
     def oversized_fair_use_files(self) -> None:
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""
