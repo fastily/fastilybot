@@ -5,6 +5,7 @@ import logging
 import re
 
 from collections.abc import Iterable
+from contextlib import suppress
 from itertools import chain
 from typing import Union
 
@@ -122,8 +123,9 @@ class Reports(FastilyBotBase):
         subpage = "Malformed SPI Cases"
 
         # fend off false positives
-        for title, text in MQuery.page_text(self.wiki, list(l := self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._contents_of_ignore(subpage)))).items():
-            self.wiki.edit(title, text, "null edit")
+        for title, text in MQuery.page_text(self.wiki, list(l := XQuery.exists_filter(self.wiki, self._difference_of((17, NS.PROJECT), ("Template:SPI case status", NS.PROJECT), ("Template:SPI archive notice", NS.PROJECT), self._contents_of_ignore(subpage))))).items():
+            with suppress(ValueError):
+                self.wiki.edit(title, text, "null edit")
 
         self._simple_update(subpage, listify(l, False, "{{/Header}}\n" + _UPDATED_AT))
 

@@ -22,7 +22,7 @@ PATH=/home/fastilybot/.local/bin:/home/fastilybot/bin:/usr/local/sbin:/usr/local
 ##################
 
 ## Weekly
-30 14 * * 1 fastilybot --no-color -r 1,2,3,5,6,8,9,10,11,12,13,14,15,16,17,19 > /home/fastilybot/logs/reports-weekly.txt 2>&1
+30 14 * * 1 fastilybot --no-color -r 1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,19,20,21 > /home/fastilybot/logs/reports-weekly.txt 2>&1
 
 ## Daily
 00 15 * * * fastilybot --no-color -r 18 > /home/fastilybot/logs/reports-daily.txt 2>&1
