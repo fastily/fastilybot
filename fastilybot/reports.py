@@ -135,6 +135,10 @@ class Reports(FastilyBotBase):
         lcl = set(self.wiki.links_on_page(self._config_of(subpage, "Allow")))
         self._simple_update(subpage, [k for k, v in MQuery.categories_on_page(self.wiki, list(self._difference_of(8, 5, 6, T.DF, self._ignore_of(subpage)))).items() if v and lcl.isdisjoint(v)])
 
+    def multi_ext_filenames(self) -> None:
+        """Reports files with multiple extensions in their filenames.  Report 22"""
+        self._simple_update("Filenames with multiple extensions", fetch_report(22))
+
     def non_free_pdfs(self) -> None:
         """Reports non-free PDFs.  Report 15"""
         self._dump_file_report("Non-free PDFs", 15)

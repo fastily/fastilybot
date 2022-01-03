@@ -159,6 +159,8 @@ def _main():
                 r.large_ip_talk_pages()
             elif id == 21:
                 r.large_user_talk_pages()
+            elif id == 22:
+                r.multi_ext_filenames()
             else:
                 log.warning("No such report id (%d), skipping", id)
 
