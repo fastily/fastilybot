@@ -43,6 +43,17 @@ class Reports(FastilyBotBase):
     ######################################## H E L P E R S ###########################################
     ##################################################################################################
 
+    def _contents_of_ignore(self, subpage: str) -> list[str]:
+        """Convenience method, fetch the links on an ignore page.  Equivalent to `self.wiki.links_on_page(self._ignore_of(subpage))`
+
+        Args:
+            subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
+
+        Returns:
+            list[str]: The contents of the ignore page of `subpage`.
+        """
+        return self.wiki.links_on_page(self._ignore_of(subpage))
+
     def _simple_update(self, subpage: str, text: Union[Iterable, str], should_escape: bool = True) -> bool:
         """Convenience method which updates to the specified database report.
 
@@ -57,28 +68,30 @@ class Reports(FastilyBotBase):
         log.info("Generating report for '%s'", subpage)
         return self.wiki.edit(_DBR + subpage, text if isinstance(text, str) else listify(text, should_escape, _UPDATED_AT), _UPDATING_REPORT)
 
-    def _dump_file_report(self, subpage: str, report_num: int) -> bool:
-        """Convenience method which updates a file-based database report using a `fastilybot-toolforge` report.  Equivalent to `self._simple_update(subpage, fetch_report(report_num))`.
+    def _dump_no_redirect(self, subpage: str, titles: Iterable[str]) -> bool:
+        """Convenience method, dumps a list of titles to the specified subpage, wrapping each title in a `No redirect` template.
 
         Args:
             subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
-            report_num (int): The `fastilybot-toolforge` report number to use
+            titles (Iterable[str]): The titles to include in the report.
 
         Returns:
             bool: `True` if the update operation succeeded.
         """
-        return self._simple_update(subpage, fetch_report(report_num))
+        return self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in titles))
 
-    def _contents_of_ignore(self, subpage: str) -> list[str]:
-        """Convenience method, fetch the links on an ignore page.  Equivalent to `self.wiki.links_on_page(self._ignore_of(subpage))`
+    def _dump_report(self, subpage: str, report_num: int, should_escape: bool = True) -> bool:
+        """Convenience method which updates a report page on enwp using a `fastilybot-toolforge` report.
 
         Args:
             subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
+            report_num (int): The `fastilybot-toolforge` report number to use
+            should_escape (bool, optional): Set `False` to disable escaping of wikilinks.  Defaults to True.
 
         Returns:
-            list[str]: The contents of the ignore page of `subpage`.
+            bool: `True` if the update operation succeeded.
         """
-        return self.wiki.links_on_page(self._ignore_of(subpage))
+        return self._simple_update(subpage, fetch_report(report_num), should_escape)
 
     ##################################################################################################
     ######################################## R E P O R T S ###########################################
@@ -91,14 +104,21 @@ class Reports(FastilyBotBase):
                             for t in self.wiki.category_members(cat, NS.TEMPLATE) if not t.endswith("/sandbox")}, self._contents_of_ignore(subpage)), False)
         self._simple_update("Free license tags which do not exist on Commons", XQuery.exists_filter(self.com, l, False), False)
 
+    def ap_files(self) -> None:
+        """Reports files credited to the Associated Press.  Report 24"""
+        self._dump_report("Files credited to The Associated Press", 24)
+
     def duplicate_on_commons(self) -> None:
         """Reports files with a duplicate on Commons.  Report 10"""
-        subpage = "Local files with a duplicate on Commons"
-        self._simple_update(subpage, self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), self._ignore_of(subpage)))
+        self._simple_update(subpage := "Local files with a duplicate on Commons", self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), self._ignore_of(subpage)))
 
     def flickr_files(self) -> None:
         """Reports free files with links to Flickr.  Report 19"""
         self._simple_update("Free files which link to Flickr", self._difference_of(18, T.KL))
+
+    def getty_files(self) -> None:
+        """Reports files credited to Getty Images.  Report 23"""
+        self._dump_report("Files credited to Getty Images", 23)
 
     def impossible_daily_deletion(self) -> None:
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
@@ -108,11 +128,11 @@ class Reports(FastilyBotBase):
 
     def large_ip_talk_pages(self) -> None:
         """Reports unusually large IP talk pages.  Report 20"""
-        self._simple_update("Unusually large IP talk pages", fetch_report(20, "User talk:"), False)
+        self._dump_report("Unusually large IP talk pages", 20, False)
 
     def large_user_talk_pages(self) -> None:
         """Reports unusually large user talk pages.  Report 21"""
-        self._simple_update("Unusually large user talk pages", fetch_report(21, "User talk:"), False)
+        self._dump_report("Unusually large user talk pages", 21, False)
 
     def low_resolution_free_files(self) -> None:
         """Reports low resolution free files.  Report 11"""
@@ -137,11 +157,11 @@ class Reports(FastilyBotBase):
 
     def multi_ext_filenames(self) -> None:
         """Reports files with multiple extensions in their filenames.  Report 22"""
-        self._simple_update("Filenames with multiple extensions", fetch_report(22))
+        self._dump_report("Filenames with multiple extensions", 22)
 
     def non_free_pdfs(self) -> None:
         """Reports non-free PDFs.  Report 15"""
-        self._dump_file_report("Non-free PDFs", 15)
+        self._dump_report("Non-free PDFs", 15)
 
     def orphaned_pdfs(self) -> None:
         """Reports orphaned, freely licensed PDFs.  Report 17"""
@@ -161,16 +181,15 @@ class Reports(FastilyBotBase):
 
     def orphaned_timed_text(self) -> None:
         """Reports pages in the Timed Text namespace without a corresponding File page.  Report 4"""
-        self._simple_update("Timed Text without a corresponding File", fetch_report(19, "TimedText:"), False)
+        self._dump_no_redirect("Timed Text without a corresponding File", fetch_report(19, "TimedText:"))
 
     def oversized_fair_use_files(self) -> None:
         """Reports on oversized fair use bitmap files that should be reduced.  Report 8"""
-        subpage = "Large fair-use images"
-        self._simple_update(subpage, self._difference_of(7, T.DF, self._ignore_of(subpage)))
+        self._simple_update(subpage := "Large fair-use images", self._difference_of(7, T.DF, self._ignore_of(subpage)))
 
     def possibly_unsourced_files(self) -> None:
         """Reports free files without a machine-readable source.  Report 12"""
-        self._dump_file_report("Free files without a machine-readable source", 12)
+        self._dump_report("Free files without a machine-readable source", 12)
 
     def shadows_commons_non_free(self) -> None:
         """Reports non-free files that shadow Commons files.  Report 14"""
@@ -178,8 +197,7 @@ class Reports(FastilyBotBase):
 
     def shadows_commons_page(self) -> None:
         """Reports local files that shadow a commons file or redirect.  Report 1"""
-        subpage = "File description pages shadowing a Commons file or redirect"
-        self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in self._difference_of(11, self._ignore_of(subpage))))
+        self._dump_no_redirect(subpage := "File description pages shadowing a Commons file or redirect", self._difference_of(11, self._ignore_of(subpage)))
 
     def transcluded_non_existent_templates(self) -> None:
         """Reports non-existent templates that have transclusions.  Report 18"""

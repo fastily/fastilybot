@@ -161,6 +161,10 @@ def _main():
                 r.large_user_talk_pages()
             elif id == 22:
                 r.multi_ext_filenames()
+            elif id == 23:
+                r.getty_files()
+            elif id == 24:
+                r.ap_files()
             else:
                 log.warning("No such report id (%d), skipping", id)
 
