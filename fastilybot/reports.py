@@ -80,18 +80,17 @@ class Reports(FastilyBotBase):
         """
         return self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in titles))
 
-    def _dump_report(self, subpage: str, report_num: int, should_escape: bool = True) -> bool:
-        """Convenience method which updates a report page on enwp using a `fastilybot-toolforge` report.
+    def _dump_file_report(self, subpage: str, report_num: int) -> bool:
+        """Convenience method which updates a `File`-based report page on enwp using a `fastilybot-toolforge` report.
 
         Args:
             subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix) 
             report_num (int): The `fastilybot-toolforge` report number to use
-            should_escape (bool, optional): Set `False` to disable escaping of wikilinks.  Defaults to True.
 
         Returns:
             bool: `True` if the update operation succeeded.
         """
-        return self._simple_update(subpage, fetch_report(report_num), should_escape)
+        return self._simple_update(subpage, fetch_report(report_num))
 
     ##################################################################################################
     ######################################## R E P O R T S ###########################################
@@ -106,7 +105,7 @@ class Reports(FastilyBotBase):
 
     def ap_files(self) -> None:
         """Reports files credited to the Associated Press.  Report 24"""
-        self._dump_report("Files credited to The Associated Press", 24)
+        self._dump_file_report("Files credited to The Associated Press", 24)
 
     def duplicate_on_commons(self) -> None:
         """Reports files with a duplicate on Commons.  Report 10"""
@@ -118,7 +117,8 @@ class Reports(FastilyBotBase):
 
     def getty_files(self) -> None:
         """Reports files credited to Getty Images.  Report 23"""
-        self._dump_report("Files credited to Getty Images", 23)
+        ignore_list = set(self._contents_of_ignore(subpage := "Files credited to Getty Images"))
+        self._simple_update(subpage, [k for k,v in MQuery.templates_on_page(self.wiki, list(fetch_report(23))).items() if ignore_list.isdisjoint(v)])
 
     def impossible_daily_deletion(self) -> None:
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
@@ -128,11 +128,11 @@ class Reports(FastilyBotBase):
 
     def large_ip_talk_pages(self) -> None:
         """Reports unusually large IP talk pages.  Report 20"""
-        self._dump_report("Unusually large IP talk pages", 20, False)
+        self._simple_update("Unusually large IP talk pages", fetch_report(20, "User talk:"), False)
 
     def large_user_talk_pages(self) -> None:
         """Reports unusually large user talk pages.  Report 21"""
-        self._dump_report("Unusually large user talk pages", 21, False)
+        self._simple_update("Unusually large user talk pages", fetch_report(21, "User talk:"), False)
 
     def low_resolution_free_files(self) -> None:
         """Reports low resolution free files.  Report 11"""
@@ -157,11 +157,11 @@ class Reports(FastilyBotBase):
 
     def multi_ext_filenames(self) -> None:
         """Reports files with multiple extensions in their filenames.  Report 22"""
-        self._dump_report("Filenames with multiple extensions", 22)
+        self._dump_file_report("Filenames with multiple extensions", 22)
 
     def non_free_pdfs(self) -> None:
         """Reports non-free PDFs.  Report 15"""
-        self._dump_report("Non-free PDFs", 15)
+        self._dump_file_report("Non-free PDFs", 15)
 
     def orphaned_pdfs(self) -> None:
         """Reports orphaned, freely licensed PDFs.  Report 17"""
@@ -189,7 +189,7 @@ class Reports(FastilyBotBase):
 
     def possibly_unsourced_files(self) -> None:
         """Reports free files without a machine-readable source.  Report 12"""
-        self._dump_report("Free files without a machine-readable source", 12)
+        self._dump_file_report("Free files without a machine-readable source", 12)
 
     def shadows_commons_non_free(self) -> None:
         """Reports non-free files that shadow Commons files.  Report 14"""
