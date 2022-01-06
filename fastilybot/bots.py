@@ -113,7 +113,7 @@ class Bots(FastilyBotBase):
 
             targets = list(targets)
             also = listify(targets[1:], header='\n\nAlso:\n') if len(targets) > 1 else ''
-            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|{targets[0]}}}}}{also}\n\n{_BOT_NOTE}", summary=f"BOT: Some of your contributions may require attention")
+            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|1={targets[0]}}}}}{also}\n\n{_BOT_NOTE}", summary=f"BOT: Some of your contributions may require attention") # 1= escapes titles containing '='
 
     ##################################################################################################
     ########################################### B O T S ##############################################
