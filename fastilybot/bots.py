@@ -131,7 +131,7 @@ class Bots(FastilyBotBase):
         """Notifies uploaders if their files have been nominated for dated deletion.  Task 6"""
         idk_l = set(chain.from_iterable(MQuery.what_transcludes_here(self.wiki, self.wiki.links_on_page(self._ignore_of(6))).values()))
 
-        d = {"Di-replaceable non-free use-notice": f"Category:Replaceable non-free use to be decided after {_yesterday_and_today[1] + timedelta(1):%-d %B %Y}"}
+        d = {"Di-replaceable non-free use-notice": f"Category:Replaceable non-free use to be decided after {_yesterday_and_today()[1] + timedelta(1):%-d %B %Y}"}
         for root_cat, talk_template in json.loads(self.wiki.page_text(self._config_of(6, "Rules"))).items():
             if target_cat := next((s for s in self.wiki.category_members(root_cat, NS.CATEGORY) if s.endswith(Bots._DD_TARGET_SUFFIX)), None):
                 d[talk_template] = target_cat
