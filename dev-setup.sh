@@ -3,7 +3,7 @@
 pushd ..
 
 git clone 'https://github.com/fastily/pwiki.git'
-pip install -e pwiki
+pip install -e pwiki --config-settings editable_mode=strict
 
 popd
 

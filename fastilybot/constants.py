@@ -9,6 +9,7 @@ class T:
     DF: str = "Template:Deletable file"
     DTT: str = "Template:Deletion template tag"
     F: str = "Template:Ffd"
+    FFDC: str = "Template:FFDC"
     KL: str = "Template:Keep local"
     NCD: str = "Template:Now Commons"
     NFDC: str = "Template:Nominated for deletion on Commons"

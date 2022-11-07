@@ -110,6 +110,8 @@ def _main():
                 b.keep_local_now_commons()
             elif id == 16:
                 pass  # see Task 14
+            elif id == 17:
+                b.outdated_ffdc()
             else:
                 log.warning("No such bot task (%d), skipping", id)
 

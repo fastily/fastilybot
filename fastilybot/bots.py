@@ -6,6 +6,7 @@ import re
 
 from collections import defaultdict, deque
 from collections.abc import Iterable
+from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from itertools import chain
 
@@ -113,7 +114,7 @@ class Bots(FastilyBotBase):
 
             targets = list(targets)
             also = listify(targets[1:], header='\n\nAlso:\n') if len(targets) > 1 else ''
-            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|1={targets[0]}}}}}{also}\n\n{_BOT_NOTE}", summary=f"BOT: Some of your contributions may require attention") # 1= escapes titles containing '='
+            self.wiki.edit(author_talk, append=f"\n\n{{{{subst:{talk_template_base}|1={targets[0]}}}}}{also}\n\n{_BOT_NOTE}", summary=f"BOT: Some of your contributions may require attention")  # 1= escapes titles containing '='
 
     ##################################################################################################
     ########################################### B O T S ##############################################
@@ -218,6 +219,26 @@ class Bots(FastilyBotBase):
         for k, v in d.items():
             if (n := re.sub(mtc_regex, "", texts[k])) != texts[k]:
                 self.wiki.edit(k, ("" if k in ncd_l else mtc_tag % v + "\n") + n, "BOT: This file has already been copied to Commons")
+
+    def outdated_ffdc(self) -> None:
+        """Removes instances of `{{FFDC}}` that refer to expired/non-existent FfDs.  Task 17."""
+        if not (l := self.wiki.what_transcludes_here(T.FFDC, NS.MAIN)):
+            return
+
+        ffdl = CQuery.what_transcludes_here(self.wiki, T.F, NS.FILE)
+        ffdc_regex = re.compile(self._regex_for(T.FFDC))
+
+        title_to_ffdc = {}
+        for k, v in (title_to_text := MQuery.page_text(self.wiki, l)).items():
+            if m := ffdc_regex.search(v):
+                title_to_ffdc[k] = m.group()
+
+        for k, v in title_to_ffdc.values():
+            try:
+                if self.wiki.convert_ns(self.wiki.normalize_title(WParser.parse(self.wiki, text=v).templates()[0]["1"]), NS.FILE) not in ffdl:
+                    self.wiki.edit(k, title_to_text[k].replace(title_to_ffdc[k], ""), "BOT: Removing caption for non-existent/expired FfD")
+            except:
+                log.warn("Could not parse FFDC on '%s', skipping", k)
 
     def prod_notifier(self) -> None:
         """Notifies page authors if their files have been PROD'd.  Task 14 & 16."""
