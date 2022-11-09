@@ -233,12 +233,19 @@ class Bots(FastilyBotBase):
             if m := ffdc_regex.search(v):
                 title_to_ffdc[k] = m.group()
 
-        for k, v in title_to_ffdc.values():
+        title_to_raw_file = {}
+        for k, v in title_to_ffdc.items():
             try:
-                if self.wiki.convert_ns(self.wiki.normalize_title(WParser.parse(self.wiki, text=v).templates()[0]["1"]), NS.FILE) not in ffdl:
-                    self.wiki.edit(k, title_to_text[k].replace(title_to_ffdc[k], ""), "BOT: Removing caption for non-existent/expired FfD")
-            except:
-                log.warn("Could not parse FFDC on '%s', skipping", k)
+                title_to_raw_file[k] = str(WParser.parse(self.wiki, text=v).templates[0]["1"])
+            except KeyError:
+                log.debug("Detected malformed FFDC template on '%s'", k)
+            except Exception:
+                log.debug("Could not parse FFDC on '%s', skipping", k, exc_info=True)
+
+        raw_file_to_norm_file = {k: self.wiki.convert_ns(v, NS.FILE) for k, v in OQuery.normalize_titles(self.wiki, list(title_to_raw_file.values())).items()}
+        for k, v in title_to_raw_file.items():
+            if raw_file_to_norm_file[v] not in ffdl:
+                self.wiki.edit(k, title_to_text[k].replace(title_to_ffdc[k], ""), "BOT: Removing caption for non-existent/expired FfD")
 
     def prod_notifier(self) -> None:
         """Notifies page authors if their files have been PROD'd.  Task 14 & 16."""
