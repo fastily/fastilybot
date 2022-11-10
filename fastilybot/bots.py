@@ -6,7 +6,6 @@ import re
 
 from collections import defaultdict, deque
 from collections.abc import Iterable
-from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from itertools import chain
 
