@@ -118,7 +118,7 @@ class Reports(FastilyBotBase):
     def getty_files(self) -> None:
         """Reports files credited to Getty Images.  Report 23"""
         ignore_list = set(self._contents_of_ignore(subpage := "Files credited to Getty Images"))
-        self._simple_update(subpage, [k for k,v in MQuery.templates_on_page(self.wiki, list(fetch_report(23))).items() if ignore_list.isdisjoint(v)])
+        self._simple_update(subpage, [k for k, v in MQuery.templates_on_page(self.wiki, list(fetch_report(23))).items() if ignore_list.isdisjoint(v)])
 
     def impossible_daily_deletion(self) -> None:
         """Reports files tagged for daily deletion which are categorized in a non-existent tracking category.  Report 13"""
@@ -202,3 +202,7 @@ class Reports(FastilyBotBase):
     def transcluded_non_existent_templates(self) -> None:
         """Reports non-existent templates that have transclusions.  Report 18"""
         self._simple_update("Transclusions of non-existent templates", sorted(["Special:WhatLinksHere/" + s for s in fetch_report(14, "Template:")]), False)
+
+    def unfiled_rfas(self) -> None:
+        """Reports unfiled RfAs.  Report 25"""
+        self._simple_update(subpage := "Unfiled RfAs", self._difference_of((25, NS.PROJECT), *((s, NS.PROJECT) for s in self._contents_of_ignore(subpage))))

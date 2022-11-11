@@ -167,6 +167,8 @@ def _main():
                 r.getty_files()
             elif id == 24:
                 r.ap_files()
+            elif id == 25:
+                r.unfiled_rfas()
             else:
                 log.warning("No such report id (%d), skipping", id)
 
