@@ -169,6 +169,8 @@ def _main():
                 r.ap_files()
             elif id == 25:
                 r.unfiled_rfas()
+            elif id == 26:
+                r.fully_protected_user_talk()
             else:
                 log.warning("No such report id (%d), skipping", id)
 

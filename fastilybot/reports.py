@@ -115,6 +115,10 @@ class Reports(FastilyBotBase):
         """Reports free files with links to Flickr.  Report 19"""
         self._simple_update("Free files which link to Flickr", self._difference_of(18, T.KL))
 
+    def fully_protected_user_talk(self) -> None:
+        """Fully protected user talk pages.  Report 26"""
+        self._simple_update("Fully protected user talk pages", fetch_report(26, "User talk:"), False)
+
     def getty_files(self) -> None:
         """Reports files credited to Getty Images.  Report 23"""
         ignore_list = set(self._contents_of_ignore(subpage := "Files credited to Getty Images"))
