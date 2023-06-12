@@ -68,6 +68,19 @@ class Reports(FastilyBotBase):
         log.info("Generating report for '%s'", subpage)
         return self.wiki.edit(_DBR + subpage, text if isinstance(text, str) else listify(text, should_escape, _UPDATED_AT), _UPDATING_REPORT)
 
+    def _dump_with_template(self, subpage: str, template_title: str, titles: Iterable[str]) -> bool:
+        """Convenience method, dumps a list of titles to the specified subpage, wrapping each title in a the specified template (`template_title`).
+
+        Args:
+            subpage (str): The target subpage (without the `Wikipedia:Database reports/` prefix)
+            template_title (str): The name of the wiki Template to use to wrap each title with.
+            titles (Iterable[str]): The titles to include in the report.
+
+        Returns:
+            bool: `True` if the update operation succeeded.
+        """
+        return self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{{template_title}|{s}}}}}" for s in titles))
+
     def _dump_no_redirect(self, subpage: str, titles: Iterable[str]) -> bool:
         """Convenience method, dumps a list of titles to the specified subpage, wrapping each title in a `No redirect` template.
 
@@ -78,7 +91,7 @@ class Reports(FastilyBotBase):
         Returns:
             bool: `True` if the update operation succeeded.
         """
-        return self._simple_update(subpage, _UPDATED_AT + "\n".join(f"* {{{{No redirect|{s}}}}}" for s in titles))
+        return self._dump_with_template(subpage, "No redirect", titles)
 
     def _dump_file_report(self, subpage: str, report_num: int) -> bool:
         """Convenience method which updates a `File`-based report page on enwp using a `fastilybot-toolforge` report.
@@ -197,7 +210,7 @@ class Reports(FastilyBotBase):
 
     def shadows_commons_non_free(self) -> None:
         """Reports non-free files that shadow Commons files.  Report 14"""
-        self._simple_update("Non-free files shadowing a Commons file", fetch_report(13) & fetch_report(5))
+        self._dump_with_template("Non-free files shadowing a Commons file", "/Template", fetch_report(13) & fetch_report(5))
 
     def shadows_commons_page(self) -> None:
         """Reports local files that shadow a commons file or redirect.  Report 1"""
