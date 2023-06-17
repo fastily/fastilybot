@@ -78,101 +78,103 @@ def _main():
         b = Bots(wiki)
 
         for id in bot_ids:
-            if id == 1:
-                b.mtc_clerk()
-            elif id == 2:
-                b.remove_bad_mtc()
-            elif id == 3:
-                pass  # see Report 5
-            elif id == 4:
-                b.untag_unorphaned_images()
-            elif id == 5:
-                b.find_license_conflicts()
-            elif id == 6:
-                b.dated_file_deletion_notifier()
-            elif id == 7:
-                b.flag_files_nominated_for_deletion_on_commons()
-            elif id == 8:
-                b.find_deleted_on_commons()
-            elif id == 9:
-                b.flag_files_saved_from_deletion_on_commons()
-            elif id == 10:
-                b.flag_orphaned_free_images()
-            elif id == 11:
-                b.date_now_commons()
-            elif id == 12:
-                b.ffd_notifier()
-            elif id == 13:
-                pass  # blanket approval for Reports
-            elif id == 14:
-                b.prod_notifier()
-            elif id == 15:
-                b.keep_local_now_commons()
-            elif id == 16:
-                pass  # see Task 14
-            elif id == 17:
-                b.outdated_ffdc()
-            else:
-                log.warning("No such bot task (%d), skipping", id)
+            match id:
+                case 1:
+                    b.mtc_clerk()
+                case 2:
+                    b.remove_bad_mtc()
+                case 3:
+                    pass  # see Report 5
+                case 4:
+                    b.untag_unorphaned_images()
+                case 5:
+                    b.find_license_conflicts()
+                case 6:
+                    b.dated_file_deletion_notifier()
+                case 7:
+                    b.flag_files_nominated_for_deletion_on_commons()
+                case 8:
+                    b.find_deleted_on_commons()
+                case 9:
+                    b.flag_files_saved_from_deletion_on_commons()
+                case 10:
+                    b.flag_orphaned_free_images()
+                case 11:
+                    b.date_now_commons()
+                case 12:
+                    b.ffd_notifier()
+                case 13:
+                    pass  # blanket approval for Reports
+                case 14:
+                    b.prod_notifier()
+                case 15:
+                    b.keep_local_now_commons()
+                case 16:
+                    pass  # see Task 14
+                case 17:
+                    b.outdated_ffdc()
+                case _:
+                    log.warning("No such bot task (%d), skipping", id)
 
     if report_ids := _determine_tasks(args.r, args.all_reports, 18):
         r = Reports(wiki)
 
         for id in report_ids:
-            if id == 1:
-                r.shadows_commons_page()
-            elif id == 2:
-                r.orphaned_files_for_discussion()
-            elif id == 3:
-                r.all_free_license_tags()
-            elif id == 4:
-                r.orphaned_timed_text()
-            elif id == 5:
-                r.malformed_spi_reports()
-            elif id == 6:
-                r.orphaned_keep_local()
-            elif id == 7:
-                pass  # part of all_free_license_tags()
-            elif id == 8:
-                r.oversized_fair_use_files()
-            elif id == 9:
-                r.missing_file_copyright_tags()
-            elif id == 10:
-                r.duplicate_on_commons()
-            elif id == 11:
-                r.low_resolution_free_files()
-            elif id == 12:
-                r.possibly_unsourced_files()
-            elif id == 13:
-                r.impossible_daily_deletion()
-            elif id == 14:
-                r.shadows_commons_non_free()
-            elif id == 15:
-                r.non_free_pdfs()
-            elif id == 16:
-                r.orphaned_file_talk()
-            elif id == 17:
-                r.orphaned_pdfs()
-            elif id == 18:
-                r.transcluded_non_existent_templates()
-            elif id == 19:
-                r.flickr_files()
-            elif id == 20:
-                r.large_ip_talk_pages()
-            elif id == 21:
-                r.large_user_talk_pages()
-            elif id == 22:
-                r.multi_ext_filenames()
-            elif id == 23:
-                r.getty_files()
-            elif id == 24:
-                r.ap_files()
-            elif id == 25:
-                r.unfiled_rfas()
-            elif id == 26:
-                r.fully_protected_user_talk()
-            else:
-                log.warning("No such report id (%d), skipping", id)
+            match id:
+                case 1:
+                    r.shadows_commons_page()
+                case 2:
+                    r.orphaned_files_for_discussion()
+                case 3:
+                    r.all_free_license_tags()
+                case 4:
+                    r.orphaned_timed_text()
+                case 5:
+                    r.malformed_spi_reports()
+                case 6:
+                    r.orphaned_keep_local()
+                case 7:
+                    pass  # part of all_free_license_tags()
+                case 8:
+                    r.oversized_fair_use_files()
+                case 9:
+                    r.missing_file_copyright_tags()
+                case 10:
+                    r.duplicate_on_commons()
+                case 11:
+                    r.low_resolution_free_files()
+                case 12:
+                    r.possibly_unsourced_files()
+                case 13:
+                    r.impossible_daily_deletion()
+                case 14:
+                    r.shadows_commons_non_free()
+                case 15:
+                    r.non_free_pdfs()
+                case 16:
+                    r.orphaned_file_talk()
+                case 17:
+                    r.orphaned_pdfs()
+                case 18:
+                    r.transcluded_non_existent_templates()
+                case 19:
+                    r.flickr_files()
+                case 20:
+                    r.large_ip_talk_pages()
+                case 21:
+                    r.large_user_talk_pages()
+                case 22:
+                    r.multi_ext_filenames()
+                case 23:
+                    r.getty_files()
+                case 24:
+                    r.ap_files()
+                case 25:
+                    r.unfiled_rfas()
+                case 26:
+                    r.fully_protected_user_talk()
+                case _:
+                    log.warning("No such report id (%d), skipping", id)
 
     wiki.save_cookies()
 
