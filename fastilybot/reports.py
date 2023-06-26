@@ -196,6 +196,10 @@ class Reports(FastilyBotBase):
         """Reports orphaned freely licensed files tagged keep local.  Report 6"""
         self._simple_update("Orphaned free files tagged keep local", fetch_report(9).intersection(CQuery.what_transcludes_here(self.wiki, T.KL, NS.FILE)))
 
+    def orphaned_keep_local_with_commons_duplicate(self) -> None:
+        """Reports orphaned freely licensed files that are tagged keep local and have a duplicate on Commons.  Report 27"""
+        self._simple_update("Orphaned free files tagged keep local with a Commons duplicate", fetch_report(1).intersection(fetch_report(9), CQuery.what_transcludes_here(self.wiki, T.KL, NS.FILE)))
+
     def orphaned_timed_text(self) -> None:
         """Reports pages in the Timed Text namespace without a corresponding File page.  Report 4"""
         self._dump_no_redirect("Timed Text without a corresponding File", fetch_report(19, "TimedText:"))

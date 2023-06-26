@@ -173,6 +173,8 @@ def _main():
                     r.unfiled_rfas()
                 case 26:
                     r.fully_protected_user_talk()
+                case 27:
+                    r.orphaned_keep_local_with_commons_duplicate()
                 case _:
                     log.warning("No such report id (%d), skipping", id)
 
