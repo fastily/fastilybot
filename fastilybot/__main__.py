@@ -7,7 +7,6 @@ from collections.abc import Iterable
 
 from rich.logging import RichHandler
 
-from pwiki.wgen import load_px, setup_px
 from pwiki.wiki import Wiki
 
 from .bots import Bots
@@ -43,15 +42,10 @@ def _main():
     cli_parser.add_argument("--all-reports", action='store_true', dest="all_reports", help="runs all possible reports tasks")
     cli_parser.add_argument("--no-color", action='store_true', dest="no_color", help="disables colored log output")
     cli_parser.add_argument("--purge-cache", action='store_true', dest="purge_cache", help="delete all cached files created by fastilybot and exit")
-    cli_parser.add_argument("--wgen", action='store_true', help="run wgen password manager")
     args = cli_parser.parse_args()
 
     if args.purge_cache:
         purge_cache()
-        return
-
-    if args.wgen:
-        setup_px()
         return
 
     if not any((args.all_reports, args.r, args.b)):
@@ -68,7 +62,7 @@ def _main():
         lg.addHandler(handler)
         lg.setLevel("DEBUG")
 
-    wiki = Wiki(username=args.u, password=load_px().get(args.u))
+    wiki = Wiki(username=args.u)
 
     if wiki.exists(f"User:{wiki.username}/shutoff"):
         log.info("killswitch triggered, exiting...")

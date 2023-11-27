@@ -14,7 +14,6 @@ import requests
 from pwiki.mquery import MQuery
 from pwiki.ns import NS
 from pwiki.wiki import Wiki
-from pwiki.wgen import load_px
 
 _CACHE_ROOT = Path("/tmp/fastilybot")
 _COMMONS = "commons.wikimedia.org"
@@ -197,7 +196,7 @@ class FastilyBotBase:
             Wiki: An anonymous Wiki object that points to the Wikimedia Commons. 
         """
         if not self._com:
-            self._com = Wiki(_COMMONS, u := self.wiki.username, load_px()[u]) if self._auto_login and self.wiki.is_logged_in else Wiki(_COMMONS, cookie_jar=None)
+            self._com = Wiki(_COMMONS, self.wiki.username) if self._auto_login and self.wiki.is_logged_in else Wiki(_COMMONS, cookie_jar=None)
 
         return self._com
 
