@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="fastilybot",
-    version="2.1.0",
+    version="2.2.0",
     author="Fastily",
     author_email="fastily@users.noreply.github.com",
     description="Fastily's Wikipedia Bots",
