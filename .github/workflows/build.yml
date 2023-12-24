@@ -15,7 +15,11 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install -U pip
-        bash dev-setup.sh
+        pushd ..
+        git clone --depth 1 https://github.com/fastily/pwiki.git
+        pip install -e pwiki
+        popd
+        pip install -r requirements-dev.txt
     - name: Test
       run: |
         python -m unittest
