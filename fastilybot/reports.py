@@ -11,6 +11,7 @@ from typing import Union
 
 from pwiki.mquery import MQuery
 from pwiki.ns import NS
+from pwiki.oquery import OQuery
 from pwiki.wiki import Wiki
 
 from .constants import T
@@ -120,6 +121,10 @@ class Reports(FastilyBotBase):
         """Reports files credited to the Associated Press.  Report 24"""
         self._dump_file_report("Files credited to The Associated Press", 24)
 
+    def confirmed_autoconfirmed_users(self) -> None:
+        """Reports users who in both the confirmed and autoconfirmed groups.  Report 28"""
+        self._simple_update("Confirmed autoconfirmed users", [f"Special:UserRights/{k}" for k, v in OQuery.list_user_rights(self.wiki, self.wiki.all_users("confirmed")).items() if {"confirmed", "autoconfirmed"}.issubset(v)], False)
+
     def duplicate_on_commons(self) -> None:
         """Reports files with a duplicate on Commons.  Report 10"""
         self._simple_update(subpage := "Local files with a duplicate on Commons", self._difference_of(1, T.DF, CQuery.what_transcludes_here(self.com, T.DTT, NS.FILE), self._ignore_of(subpage)))
@@ -222,7 +227,7 @@ class Reports(FastilyBotBase):
 
     def transcluded_non_existent_templates(self) -> None:
         """Reports non-existent templates that have transclusions.  Report 18"""
-        self._simple_update("Transclusions of non-existent templates", sorted(["Special:WhatLinksHere/" + s for s in fetch_report(14, "Template:")]), False)
+        self._simple_update("Transclusions of non-existent templates", sorted([f"Special:WhatLinksHere/{s}" for s in fetch_report(14, "Template:")]), False)
 
     def unfiled_rfas(self) -> None:
         """Reports unfiled RfAs.  Report 25"""

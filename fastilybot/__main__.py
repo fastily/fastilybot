@@ -169,6 +169,8 @@ def _main():
                     r.fully_protected_user_talk()
                 case 27:
                     r.orphaned_keep_local_with_commons_duplicate()
+                case 28:
+                    r.confirmed_autoconfirmed_users()
                 case _:
                     log.warning("No such report id (%d), skipping", id)
 
