@@ -171,6 +171,12 @@ def _main():
                     r.orphaned_keep_local_with_commons_duplicate()
                 case 28:
                     r.confirmed_autoconfirmed_users()
+                case 29:
+                    r.largest_orphaned_free_files_by_bytes()
+                case 30:
+                    r.smallest_orphaned_free_files_by_bytes()
+                case 31:
+                    r.smallest_orphaned_free_files_by_resolution()
                 case _:
                     log.warning("No such report id (%d), skipping", id)
 

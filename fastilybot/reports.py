@@ -156,6 +156,10 @@ class Reports(FastilyBotBase):
         """Reports unusually large user talk pages.  Report 21"""
         self._simple_update("Unusually large user talk pages", fetch_report(21, "User talk:"), False)
 
+    def largest_orphaned_free_files_by_bytes(self) -> None:
+        """Reports largest orphaned free files by file size.  Report 29"""
+        self._dump_file_report("Largest orphaned free files by bytes", 27)
+
     def low_resolution_free_files(self) -> None:
         """Reports low resolution free files.  Report 11"""
         self._simple_update("Orphaned low-resolution free files", self._difference_of(10, "Category:Wikipedia images available as SVG", "Category:All files proposed for deletion"))
@@ -224,6 +228,14 @@ class Reports(FastilyBotBase):
     def shadows_commons_page(self) -> None:
         """Reports local files that shadow a commons file or redirect.  Report 1"""
         self._dump_no_redirect(subpage := "File description pages shadowing a Commons file or redirect", self._difference_of(11, self._ignore_of(subpage)))
+
+    def smallest_orphaned_free_files_by_bytes(self) -> None:
+        """Reports smallest orphaned free files by file size.  Report 30"""
+        self._dump_file_report("Smallest orphaned free files by bytes", 28)
+
+    def smallest_orphaned_free_files_by_resolution(self) -> None:
+        """Reports smallest orphaned free files by resolution.  Report 31"""
+        self._dump_file_report("Smallest orphaned free files by resolution", 29)
 
     def transcluded_non_existent_templates(self) -> None:
         """Reports non-existent templates that have transclusions.  Report 18"""
