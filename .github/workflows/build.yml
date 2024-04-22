@@ -19,7 +19,7 @@ jobs:
         git clone --depth 1 https://github.com/fastily/pwiki.git
         pip install -e pwiki
         popd
-        pip install -r requirements-dev.txt
+        pip install -r requirements.txt
     - name: Test
       run: |
         python -m unittest
